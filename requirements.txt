@@ -1,0 +1,11 @@
+Flask>=3.1,<4
+SQLAlchemy>=2.0,<2.1  # the ORM: models.py is the data model in Python classes
+alembic>=1.13,<2  # database migrations (flask --app stickyminutes upgrade-db)
+psycopg[binary]>=3.2,<4  # talks to PostgreSQL (Neon) on the live site; SQLite needs nothing extra
+tzdata>=2025.1  # time zone data (Windows doesn't have it built in)
+gunicorn>=23  # the web server on Render (Linux only; locally use "flask run")
+anthropic>=0.80  # the Claude API (llm.py)
+pydantic>=2.9,<3  # the shape Claude's answer must have, checked in Python (schema.py)
+python-docx>=1.1,<2  # reads .docx transcripts and writes the Word download
+python-dotenv>=1  # reads ANTHROPIC_API_KEY from .env on your PC (flask does this by itself)
+pytest>=8

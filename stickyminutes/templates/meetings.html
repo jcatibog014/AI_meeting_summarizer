@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head, empty %}
+{% from "_icons.html" import icon %}
+{% block title %}Meetings - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {% call page_head('Meetings') %}
+    {% if has_page('meetings.new') %}<a class="button" href="{{ url_for('meetings.new') }}">{{ icon('plus') }} New meeting</a>{% endif %}
+  {% endcall %}
+  {% if meetings %}
+    {% block meeting_list %}{% endblock %}
+  {% else %}
+    {% call empty('No Meetings Yet', 'Paste a transcript or upload one from Zoom, Google Meet or Teams, and get the summary, decisions and action items.') %}
+      {% if has_page('meetings.new') %}<a class="button" href="{{ url_for('meetings.new') }}">{{ icon('plus') }} New meeting</a>{% endif %}
+    {% endcall %}
+  {% endif %}
+{% endblock %}

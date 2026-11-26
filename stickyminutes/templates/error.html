@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty %}
+{% block title %}{{ code }} - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {% call empty('Not Found' if code == 404 else 'Not Allowed' if code == 403 else 'Slow Down' if code == 429 else 'Not Right Now' if code == 409 else 'Something Went Wrong', message) %}
+    <a class="button" href="{{ url_for('auth.index') }}">{{ 'Back to Meetings' if g.user else 'Go to the start' }}</a>
+  {% endcall %}
+{% endblock %}
