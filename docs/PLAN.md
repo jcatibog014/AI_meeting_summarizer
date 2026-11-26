@@ -157,7 +157,7 @@ Chart and note colours are checked with the dataviz validator.
 - [x] Stage 2: transcripts
 - [x] Stage 3: LLM core
 - [x] Stage 4: validation and repair
-- [ ] Stage 5: notes page + Review & Proof
+- [x] Stage 5: notes page + Review & Proof
 - [ ] Stage 6: Action Tracker
 - [ ] Stage 7: Export & Share
 - [ ] Stage 8: Quality Lab

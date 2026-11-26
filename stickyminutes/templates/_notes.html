@@ -30,10 +30,19 @@
       </div>
     </section>
   {% endif %}
+  {% set all_items = items.values()|sum(start=[]) %}
+  {% set checked = all_items|rejectattr('review', 'equalto', 'unreviewed')|list|length %}
   <section class="overview" aria-labelledby="overview-title">
     <h2 id="overview-title" class="visually-hidden">Summary</h2>
     <p>{{ meeting.overview }}</p>
     {% if run and run.practice %}<p class="muted small">{{ icon('info', 15) }} Practice notes: made without Claude, because there is no API key yet.</p>{% endif %}
+    {% if all_items %}
+      <div class="review-progress">
+        <span><strong>{{ checked }} of {{ all_items|length }}</strong> notes checked</span>
+        <progress max="{{ all_items|length }}" value="{{ checked }}" aria-label="Notes checked">{{ checked }} of {{ all_items|length }}</progress>
+        <span class="muted small">Accept, reject or edit each note. Open “Proof” to see the words it comes from.</span>
+      </div>
+    {% endif %}
   </section>
   <div class="board">
     {% for kind, heading, colour in sections %}

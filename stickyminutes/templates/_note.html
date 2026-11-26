@@ -1,7 +1,15 @@
-{# One sticky note. Evidence chips link to the transcript line (#line-12): the page lights it up. #}
+{# One sticky note, with its proof (the quotes) and the review buttons.
+   Evidence chips link to the transcript line (#line-12): app.js lights it up. #}
 {% from "_icons.html" import icon %}
-{% macro note(item, colour) %}
-  <li class="note note-{{ colour }}{% if item.flag %} is-flagged{% endif %}{% if item.review == 'rejected' %} is-rejected{% endif %}" id="item-{{ item.id }}">
+{% from "_macros.html" import csrf %}
+{% macro note(item, colour, controls=True) %}
+  <li class="note note-{{ colour }}{% if item.flag %} is-flagged{% endif %}{% if item.review == 'rejected' %} is-rejected{% endif %}{% if item.status == 'done' and item.kind == 'action' %} is-done{% endif %}" id="item-{{ item.id }}">
+    {% if item.review != 'unreviewed' or item.edited %}
+      <p class="note-stamp">
+        {% if item.review == 'accepted' %}<span class="stamp stamp-ok">{{ icon('check', 13) }} {{ 'Edited' if item.edited else 'Accepted' }}</span>{% endif %}
+        {% if item.review == 'rejected' %}<span class="stamp stamp-no">{{ icon('x', 13) }} Rejected</span>{% endif %}
+      </p>
+    {% endif %}
     <p class="note-text">{{ item.text }}</p>
     {% if item.kind == 'decision' and item.detail %}<p class="note-detail">Why: {{ item.detail }}</p>{% endif %}
     {% if item.kind == 'action' %}
@@ -10,9 +18,10 @@
         {% if item.due_date %}<span>{{ icon('calendar', 14) }} {{ item.due_date|short_day }}{% if item.due_phrase %} <span class="muted">({{ item.due_phrase }})</span>{% endif %}</span>
         {% elif item.due_phrase %}<span>{{ icon('calendar', 14) }} {{ item.due_phrase }}</span>{% endif %}
         {% if item.priority == 'high' %}<span class="priority-high">High priority</span>{% endif %}
+        {% if item.status == 'done' %}<span class="done-word">{{ icon('check', 14) }} Done</span>{% endif %}
       </p>
     {% endif %}
-    {% if item.flag %}<p class="note-flag">{{ icon('flag', 14) }} {{ item.flag }}</p>{% endif %}
+    {% if item.flag %}<p class="note-flag">{{ icon('flag', 14) }} <span><strong>Check this:</strong> {{ item.flag }}</span></p>{% endif %}
     <p class="evidence">
       {% for e in item.evidence %}
         <a class="chip{% if e.found == false %} chip-missing{% elif e.found %} chip-found{% endif %}" href="#line-{{ e.line }}" data-line-link="{{ e.line }}"
@@ -21,6 +30,31 @@
         </a>
       {% endfor %}
     </p>
-    {% if caller %}{{ caller() }}{% endif %}
+    {% if controls %}
+      <details class="proof">
+        <summary>Proof</summary>
+        <ul>
+          {% for e in item.evidence %}
+            <li>
+              <span class="proof-mark">{% if e.found %}{{ icon('check', 14) }}<span class="visually-hidden">Found</span>{% elif e.found == false %}{{ icon('alert', 14) }}<span class="visually-hidden">Not found</span>{% endif %}</span>
+              <span>“{{ e.quote }}” <a href="#line-{{ e.line }}" data-line-link="{{ e.line }}">line {{ e.line }}</a>{% if e.found == false %} <em>(not found on that line)</em>{% endif %}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </details>
+      <div class="note-actions">
+        {% if item.review == 'unreviewed' %}
+          <form method="post" action="{{ url_for('review.decide', item_id=item.id) }}">{{ csrf() }}<input type="hidden" name="decision" value="accept">
+            <button class="note-button" type="submit">{{ icon('check', 14) }} Accept</button></form>
+          <form method="post" action="{{ url_for('review.decide', item_id=item.id) }}">{{ csrf() }}<input type="hidden" name="decision" value="reject">
+            <button class="note-button" type="submit">{{ icon('x', 14) }} Reject</button></form>
+        {% else %}
+          <form method="post" action="{{ url_for('review.decide', item_id=item.id) }}">{{ csrf() }}<input type="hidden" name="decision" value="undo">
+            <button class="note-button" type="submit">{{ icon('retry', 14) }} Undo</button></form>
+        {% endif %}
+        <a class="note-button note-icon" href="{{ url_for('review.edit', item_id=item.id) }}" title="Edit this note" aria-label="Edit">{{ icon('pencil', 15) }}</a>
+        {% if caller %}{{ caller() }}{% endif %}
+      </div>
+    {% endif %}
   </li>
 {% endmacro %}

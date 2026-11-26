@@ -471,3 +471,44 @@ table.table { width: 100%; border-collapse: collapse; }
   .meeting-side { display: contents; }
   .meeting-side > .summary-card { order: -1; }
 }
+
+/* ---------- Review & Proof ---------- */
+.review-progress { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; margin-top: .75rem; }
+.review-progress progress { width: min(14rem, 100%); height: .7rem; accent-color: var(--ok); }
+.note-stamp { margin: 0 0 .35rem !important; }
+.stamp { display: inline-flex; align-items: center; gap: .25rem; font-size: .75rem; font-weight: 700; text-transform: uppercase;
+         letter-spacing: .05em; padding: .05rem .45rem; border: 2px solid currentColor; border-radius: 3px; transform: rotate(-2deg); }
+.stamp-ok { color: var(--ok); background: var(--surface); }
+.stamp-no { color: var(--danger); background: var(--surface); }
+.done-word { font-weight: 700; color: var(--ok); }
+.note.is-done .note-text { text-decoration: line-through; text-decoration-thickness: 2px; }
+.proof { margin: .5rem 0 0; font-size: .9rem; }
+.proof summary { cursor: pointer; font-weight: 700; color: var(--note-ink); width: max-content; }
+.proof ul { list-style: none; margin: .4rem 0 0; padding: 0; display: grid; gap: .35rem; }
+.proof li { display: flex; gap: .35rem; align-items: flex-start; }
+.proof-mark { flex: none; width: 14px; margin-top: .2rem; }
+.proof-mark svg { display: block; }
+.proof li:has(.proof-mark svg) .proof-mark { color: var(--ok); }
+.proof em { color: var(--danger); font-style: normal; font-weight: 700; }
+.proof a { color: var(--note-ink); }
+.note-actions { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .6rem; padding-top: .55rem; border-top: 1px dashed color-mix(in srgb, var(--note-ink) 25%, transparent); }
+.note-actions form { margin: 0; }
+.note-button { display: inline-flex; align-items: center; gap: .3rem; min-height: 2rem; padding: 0 .6rem; border-radius: 999px;
+               font: inherit; font-size: .8125rem; font-weight: 700; color: var(--note-ink); background: color-mix(in srgb, var(--surface) 70%, transparent);
+               border: 1px solid color-mix(in srgb, var(--note-ink) 35%, transparent); cursor: pointer; text-decoration: none; }
+.note-button:hover { background: var(--surface); border-color: var(--note-ink); }
+@media (pointer: coarse) { .note-button { min-height: 2.75rem; padding: 0 .8rem; } }
+.edit-layout { display: grid; gap: 1.25rem; align-items: start; max-width: 70rem; }
+@media (min-width: 60rem) { .edit-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.edit-layout textarea.short { min-height: 6rem; max-width: none; }
+.edit-layout input, .edit-layout select { max-width: none; }
+.proof-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
+.proof-list li { border-left: 4px solid var(--rule); padding-left: .75rem; }
+.proof-list li.is-found { border-left-color: var(--ok); }
+.proof-list li.is-missing { border-left-color: var(--danger); }
+.proof-quote { font-weight: 600; margin-bottom: .2rem; }
+.proof-list .is-found .proof-quote svg { color: var(--ok); vertical-align: -2px; }
+.proof-list .is-missing .proof-quote svg { color: var(--danger); vertical-align: -2px; }
+.proof-line { color: var(--muted); margin: 0; }
+.note-button.note-icon { width: 2rem; padding: 0; justify-content: center; margin-left: auto; }
+@media (pointer: coarse) { .note-button.note-icon { width: 2.75rem; } }
