@@ -188,7 +188,7 @@ def test_the_demo_gets_three_real_summaries_a_day(app, demo):
     page = words(client.get(response.headers["Location"]))
     assert "can run 3 real summaries a day" in page
     with app.app_context():
-        assert db.session().scalar(select(func.count()).select_from(Run)) == 3
+        assert db.session().scalar(select(func.count()).select_from(Run).where(Run.sample.is_(False))) == 3
 
 
 def test_the_site_stops_at_its_daily_cap(app, owner):

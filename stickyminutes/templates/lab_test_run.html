@@ -5,9 +5,9 @@
   {{ page_head('Test Run Details', back=url_for('lab.tests'), back_label='Test Set') }}
   <p class="meeting-facts">
     <span>Prompt {{ run.prompt_version }}</span>
-    <span>{{ 'Practice (no API key)' if run.practice else model.label }}</span>
+    <span>{{ 'Sample (not made by Claude)' if run.sample else 'Practice (no API key)' if run.practice else model.label }}</span>
     <span>{{ run.created_at|when }}</span>
-    {% if not run.practice %}<span>{{ run.cost_micros|dollars }}</span>{% endif %}
+    {% if not run.practice and not run.sample %}<span>{{ run.cost_micros|dollars }}</span>{% endif %}
   </p>
   {% if run.status in ('queued', 'running') %}
     <section class="card working" data-status-url="{{ url_for('lab.test_status', run_id=run.id) }}" aria-live="polite">

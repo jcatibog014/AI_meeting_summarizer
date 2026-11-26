@@ -20,9 +20,13 @@ def two_meetings(app, client):
     return ids
 
 
-def action_ids(app):
+def action_ids(app, workspace_id=None):
+    from stickyminutes.models import Meeting
+    query = select(Item.id).join(Meeting, Meeting.id == Item.meeting_id).where(Item.kind == "action").order_by(Item.id)
+    if workspace_id is not None:
+        query = query.where(Meeting.workspace_id == workspace_id)
     with app.app_context():
-        return db.session().scalars(select(Item.id).where(Item.kind == "action").order_by(Item.id)).all()
+        return db.session().scalars(query).all()
 
 
 def test_every_meetings_actions_in_one_list(app, owner):
@@ -126,7 +130,7 @@ def test_ics_text_is_escaped_and_folded():
 
 
 def test_another_workspace_cant_mark_it_done(app, owner, demo):
-    client, _ = owner
+    client, workspace_id = owner
     two_meetings(app, client)
     stranger, _ = demo
-    assert post(stranger, f"/items/{action_ids(app)[0]}/done", {"done": "1"}).status_code == 404
+    assert post(stranger, f"/items/{action_ids(app, workspace_id)[0]}/done", {"done": "1"}).status_code == 404

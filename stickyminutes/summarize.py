@@ -169,13 +169,13 @@ def work(app, run_id):
             s.close()
 
 
-def _work(s, app, run_id):
+def _work(s, app, run_id, client=None):
     run = s.get(Run, run_id)
     if run is None or run.status != "queued":
         return
     meeting = s.get(Meeting, run.meeting_id)
     workspace = s.get(Workspace, meeting.workspace_id)
-    client = llm.client_for(app)
+    client = client or llm.client_for(app)
     run.status = meeting.status = "running"
     run.started_at = utcnow()
     s.commit()
@@ -250,7 +250,7 @@ def ask_and_check(client, model, effort, system, messages, lines, meeting, on_re
 
 
 def _count(s, run, workspace, reply):
-    cost = 0 if run.practice else reply.cost_micros()
+    cost = 0 if run.practice or run.sample else reply.cost_micros()
     run.input_tokens += reply.input_tokens
     run.output_tokens += reply.output_tokens
     run.cache_read_tokens += reply.cache_read

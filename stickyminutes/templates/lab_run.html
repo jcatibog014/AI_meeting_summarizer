@@ -10,12 +10,12 @@
       <dl class="facts">
         <div><dt>Meeting</dt><dd><a href="{{ url_for('meetings.show', meeting_id=meeting.id) }}">{{ meeting.title }}</a></dd></div>
         <div><dt>Started</dt><dd>{{ run.created_at|when }}</dd></div>
-        <div><dt>Model</dt><dd>{{ 'Practice (no API key)' if run.practice else model.label }}{% if run.served_model and run.served_model != run.model %} &rarr; {{ run.served_model }} (fallback){% endif %}</dd></div>
+        <div><dt>Model</dt><dd>{{ 'Sample: written for the demo, not made by Claude' if run.sample else 'Practice (no API key)' if run.practice else model.label }}{% if run.served_model and run.served_model != run.model %} &rarr; {{ run.served_model }} (fallback){% endif %}</dd></div>
         <div><dt>Prompt</dt><dd>{{ run.prompt_version }}, effort {{ run.effort }}</dd></div>
         <div><dt>Tries</dt><dd>{{ run.attempts }}</dd></div>
         <div><dt>Tokens</dt><dd>{{ run.input_tokens|number }} in, {{ run.output_tokens|number }} out</dd></div>
         <div><dt>Prompt cache</dt><dd>{{ run.cache_write_tokens|number }} written, {{ run.cache_read_tokens|number }} read</dd></div>
-        {% if not run.practice %}<div><dt>Cost</dt><dd>{{ run.cost_micros|dollars }} (estimated {{ run.estimate_micros|dollars }})</dd></div>{% endif %}
+        {% if not run.practice and not run.sample %}<div><dt>Cost</dt><dd>{{ run.cost_micros|dollars }} (estimated {{ run.estimate_micros|dollars }})</dd></div>{% endif %}
         <div><dt>Time</dt><dd>{{ run.seconds|seconds if run.seconds else '–' }}</dd></div>
         <div><dt>Ended with</dt><dd>{{ run.stop_reason or '–' }}</dd></div>
         <div><dt>Result</dt><dd>{{ {'done': 'Done', 'needs_review': 'Needs review', 'failed': 'Failed'}.get(run.status, 'Running') }}</dd></div>
@@ -49,7 +49,7 @@
     {% if raw %}
       <section class="card raw-card">
         <details>
-          <summary><h2>Claude's Last Answer</h2></summary>
+          <summary><h2>{{ 'The Last Answer' if run.sample or run.practice else "Claude's Last Answer" }}</h2></summary>
           <pre>{{ raw }}</pre>
         </details>
       </section>

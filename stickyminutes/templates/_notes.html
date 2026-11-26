@@ -26,7 +26,7 @@
       {{ icon('flag') }}
       <div>
         <h2>Some Notes Need a Look</h2>
-        <p>Claude fixed what it could, but {{ plural(flagged_count if flagged_count is defined else 0, 'note') }} still failed a check. They have a flag: read the transcript line before you trust them.</p>
+        <p>The checks sent the problems back for fixing, but {{ plural(flagged_count if flagged_count is defined else 0, 'note') }} still failed a check. Each has a flag: read its transcript line before you trust it.</p>
       </div>
     </section>
   {% endif %}
@@ -35,7 +35,8 @@
   <section class="overview" aria-labelledby="overview-title">
     <h2 id="overview-title" class="visually-hidden">Summary</h2>
     <p>{{ meeting.overview }}</p>
-    {% if run and run.practice %}<p class="muted small">{{ icon('info', 15) }} Practice notes: made without Claude, because there is no API key yet.</p>{% endif %}
+    {% if run and run.sample %}<p class="muted small">{{ icon('info', 15) }} Sample notes, written for the demo to show what a summary looks like (not made by Claude). They went through the same checks. Run again to summarize it for real.</p>
+    {% elif run and run.practice %}<p class="muted small">{{ icon('info', 15) }} Practice notes: made without Claude, because there is no API key yet.</p>{% endif %}
     {% if all_items %}
       <div class="review-progress">
         <span><strong>{{ checked }} of {{ all_items|length }}</strong> notes checked</span>

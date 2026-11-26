@@ -134,6 +134,8 @@ class Run(Base):
     prompt_version: Mapped[str] = mapped_column(String(20))
     effort: Mapped[str] = mapped_column(String(10), default="medium", server_default="medium")
     practice: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # The demo's sample runs (demo_samples.py): answers written for the demo, not by Claude. Free.
+    sample: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     input_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     output_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
@@ -224,6 +226,7 @@ class EvalRun(Base):
     prompt_version: Mapped[str] = mapped_column(String(20))
     model: Mapped[str] = mapped_column(String(40))
     practice: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    sample: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     # queued -> running -> done | failed
     status: Mapped[str] = mapped_column(String(20), default="queued", server_default="queued")
     cost_micros: Mapped[int] = mapped_column(Integer, default=0, server_default="0")

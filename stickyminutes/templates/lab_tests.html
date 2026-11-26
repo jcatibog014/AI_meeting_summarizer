@@ -53,18 +53,19 @@
               <td><a href="{{ url_for('lab.test_run', run_id=run.id) }}">{{ run.created_at|when }}</a>
                 {% if run.status in ('queued', 'running') %}<span class="pill pill-accent">Running</span>{% elif run.status == 'failed' %}<span class="pill pill-danger">Failed</span>{% endif %}</td>
               <td>{{ run.prompt_version }}</td>
-              <td>{{ 'Practice' if run.practice else run.model }}</td>
+              <td>{{ 'Sample' if run.sample else 'Practice' if run.practice else run.model }}</td>
               <td class="num">{{ sum.get('recall')|percent }} <meter min="0" max="1" value="{{ sum.get('recall') or 0 }}"></meter></td>
               <td class="num">{{ sum.get('owners')|percent }}</td>
               <td class="num">{{ sum.get('grounding')|percent }} <meter min="0" max="1" value="{{ sum.get('grounding') or 0 }}"></meter></td>
               <td class="num">{{ sum.get('first_try')|percent }}</td>
               <td class="num">{{ sum.get('passed')|percent }}</td>
               <td class="num">{{ sum.get('made_up', '–') }}</td>
-              <td class="num">{{ '–' if run.practice else run.cost_micros|dollars }}</td>
+              <td class="num">{{ '–' if run.practice or run.sample else run.cost_micros|dollars }}</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
+      {% if runs|selectattr('sample')|list %}<p class="muted small">Sample runs show what the scores look like: their answers were written for the demo, not made by Claude.</p>{% endif %}
       <p class="muted small">Found: expected decisions and action items in the notes. Made up: decisions or action items in the meeting where nothing was decided (0 is right).</p>
     {% else %}
       <p class="muted">No test runs yet. Run the test set to score a prompt and a model, then change one and run it again to compare.</p>

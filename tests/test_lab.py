@@ -52,7 +52,7 @@ def test_another_workspaces_run_is_not_found(app, owner, demo):
     run_summary(client, meeting_id)
     stranger, _ = demo
     assert stranger.get(f"/lab/runs/{latest(app, meeting_id).id}").status_code == 404
-    assert "No Runs Yet" in words(stranger.get("/lab"))
+    assert "Launch planning" not in words(stranger.get("/lab"))  # only the demo's own sample runs
 
 
 # ---------- The test set ----------
@@ -112,7 +112,7 @@ def test_practice_mode_runs_free_even_in_the_demo(app, demo):
     client, _ = demo
     post(client, "/lab/tests", {"prompt_version": "v1", "model": "claude-opus-5-5"})
     with app.app_context():
-        run = db.session().scalar(select(EvalRun))
+        run = db.session().scalar(select(EvalRun).where(EvalRun.sample.is_(False)))
         assert run.practice and run.status == "done" and run.cost_micros == 0
     assert "Practice" in words(client.get("/lab/tests"))
 
@@ -148,3 +148,18 @@ def test_the_prompt_version_setting_is_used(app, owner):
         assert db.session().get(Workspace, workspace_id).prompt_version == "v2"
     assert "Before you answer, check every quote" in fake.calls[0]["system"][0]["text"]
     assert latest(app, meeting_id).prompt_version == "v2"
+
+
+def test_try_claude_command(app):
+    runner = app.test_cli_runner()
+    refused = runner.invoke(args=["try-claude"])
+    assert refused.exit_code != 0 and "no ANTHROPIC_API_KEY" in refused.output
+    from stickyminutes import demo_samples
+    from stickyminutes.llm import transcript_lines
+    standup = demo_samples.SAMPLES[0]["answer"]
+    app.extensions["claude"] = FakeClaude(script=[lambda messages: demo_samples.build(standup, transcript_lines(messages))],
+                                          practice=False)
+    result = runner.invoke(args=["try-claude", "--sample", "standup", "--model", "claude-sonnet-5-5"])
+    assert result.exit_code == 0, result.output
+    assert "Try 1: passed every check." in result.output and "Monday stand-up" in result.output
+    assert "Fix the bug that makes the discount code disappear (Ben Cruz, due" in result.output

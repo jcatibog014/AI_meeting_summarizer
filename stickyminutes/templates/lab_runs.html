@@ -5,6 +5,7 @@
   {{ page_head('Quality Lab') }}
   {% include "_lab_tabs.html" %}
   {% if runs %}
+    {% if runs|selectattr('sample')|list %}<p class="muted small">Runs marked Sample were written for the demo, not made by Claude. They went through the same checks.</p>{% endif %}
     <div class="stat-grid">
       <div class="stat"><span class="stat-number">{{ totals.runs }}</span><span class="stat-label">Summaries run</span></div>
       <div class="stat"><span class="stat-number">{{ (totals.right_first / totals.runs)|percent if totals.runs else '–' }}</span><span class="stat-label">Right the first time</span></div>
@@ -25,12 +26,12 @@
             <tr>
               <td><a href="{{ url_for('lab.run', run_id=run.id) }}">{{ run.meeting.title }}</a></td>
               <td>{{ run.created_at|when }}</td>
-              <td>{{ 'Practice' if run.practice else (run.served_model or run.model) }}</td>
+              <td>{{ 'Sample' if run.sample else 'Practice' if run.practice else (run.served_model or run.model) }}</td>
               <td>{{ run.prompt_version }}</td>
               <td class="num">{{ run.attempts }}</td>
               <td class="num">{{ problems.get(run.id, 0) }}</td>
               <td class="num">{{ run.input_tokens|number }} / {{ run.output_tokens|number }}</td>
-              <td class="num">{{ '–' if run.practice else run.cost_micros|dollars }}</td>
+              <td class="num">{{ '–' if run.practice or run.sample else run.cost_micros|dollars }}</td>
               <td class="num">{{ run.seconds|seconds if run.seconds else '–' }}</td>
               <td><span class="pill {{ result[1] }}">{{ result[0] }}</span></td>
             </tr>

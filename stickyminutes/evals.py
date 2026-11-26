@@ -227,12 +227,12 @@ def work(app, run_id):
             s.close()
 
 
-def _work(s, app, run_id):
+def _work(s, app, run_id, client=None):
     run = s.get(EvalRun, run_id)
     if run is None or run.status != "queued":
         return
     workspace = s.get(Workspace, run.workspace_id)
-    client = llm.client_for(app)
+    client = client or llm.client_for(app)
     run.status, run.started_at = "running", utcnow()
     s.commit()
     results = []
@@ -242,7 +242,7 @@ def _work(s, app, run_id):
         began = time.perf_counter()
 
         def on_reply(reply, attempt):
-            if not run.practice:
+            if not run.practice and not run.sample:
                 cost = reply.cost_micros()
                 run.cost_micros += cost
                 s.add(UsageEntry(workspace_id=workspace.id, day=utcnow().date(), is_demo=workspace.is_demo,

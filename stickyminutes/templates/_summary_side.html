@@ -9,9 +9,9 @@
   {% if run %}
     <dl class="facts">
       <div><dt>Last run</dt><dd>{{ run.created_at|when }}</dd></div>
-      <div><dt>Model</dt><dd>{{ 'Practice' if run.practice else (run.served_model or run.model) }}{% if run.served_model and run.served_model != run.model %} <span class="muted">(fallback)</span>{% endif %}</dd></div>
+      <div><dt>Model</dt><dd>{{ 'Sample (not Claude)' if run.sample else 'Practice' if run.practice else (run.served_model or run.model) }}{% if run.served_model and run.served_model != run.model %} <span class="muted">(fallback)</span>{% endif %}</dd></div>
       <div><dt>Tries</dt><dd>{{ run.attempts }}</dd></div>
-      {% if not run.practice %}<div><dt>Cost</dt><dd>{{ run.cost_micros|dollars }}</dd></div>{% endif %}
+      {% if not run.practice and not run.sample %}<div><dt>Cost</dt><dd>{{ run.cost_micros|dollars }}</dd></div>{% endif %}
       {% if run.seconds %}<div><dt>Time</dt><dd>{{ run.seconds|seconds }}</dd></div>{% endif %}
     </dl>
     {% if has_page('lab.run') %}<p><a href="{{ url_for('lab.run', run_id=run.id) }}">See how this run went</a></p>{% endif %}

@@ -63,7 +63,7 @@ def check(s, app, workspace, moment, estimate_micros=0):
 
 def record(s, workspace, run, cost_micros, moment):
     """Write one call's cost to the ledger (practice runs cost nothing and write nothing)."""
-    if run.practice:
+    if run.practice or getattr(run, "sample", False):
         return
     s.add(UsageEntry(workspace_id=workspace.id, run_id=run.id, day=moment.date(), is_demo=workspace.is_demo,
                      cost_micros=cost_micros, created_at=moment))
