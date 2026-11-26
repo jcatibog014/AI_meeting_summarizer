@@ -33,7 +33,7 @@ from pathlib import Path
 
 from sqlalchemy import delete, select
 
-from . import budget, db, llm, meetings, pricing, schema, transcripts
+from . import budget, checks, db, llm, meetings, pricing, schema, transcripts
 from .dates import utcnow
 from .models import Item, Meeting, Run, RunIssue, Workspace
 
@@ -46,7 +46,7 @@ STALE_AFTER = timedelta(minutes=10)
 KINDS = (("key_points", "point"), ("decisions", "decision"), ("action_items", "action"), ("open_questions", "question"))
 # Layer 3 (checks.py): function(notes, lines, meeting, found) -> [schema.Problem].
 # `found` is filled with (section, item, quote) -> True/False: was that quote in the transcript?
-reviewers = []
+reviewers = [checks.review]
 
 
 class CantStart(Exception):
