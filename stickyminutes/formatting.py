@@ -66,11 +66,17 @@ def seconds(value):
     return f"{minutes} min {rest} s"
 
 
+def percent(value):
+    """0.8333 -> '83%'; None -> a dash (the number means nothing here)."""
+    return "–" if value is None else f"{round(value * 100)}%"
+
+
 def plural(n, word, many=None):
     return f"{n} {word if n == 1 else (many or word + 's')}"
 
 
 def init_app(app):
     app.jinja_env.filters.update(day=day, short_day=short_day, when=when, ago=ago, number=number,
-                                 dollars=pricing.dollars, cents=pricing.cents, seconds=seconds)
+                                 dollars=pricing.dollars, cents=pricing.cents, seconds=seconds,
+                                 percent=percent)
     app.jinja_env.globals.update(plural=plural)

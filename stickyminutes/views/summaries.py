@@ -16,7 +16,7 @@ SECTIONS = (("point", "Key Points", "green"), ("decision", "Decisions", "blue"),
 def rough_estimate(workspace, meeting):
     """The cost shown on the button, from the transcript's length (no API call on every page view).
     The real count (count_tokens) is taken when the summary starts."""
-    chars = sum(len(line.text) for line in meeting.lines) + len(summarize.prompt()) + 400
+    chars = sum(len(line.text) for line in meeting.lines) + len(summarize.prompt(workspace.prompt_version)) + 400
     return pricing.cost_micros(workspace.model, input_tokens=transcripts.estimate_tokens(chars),
                                output_tokens=summarize.OUTPUT_GUESS)
 

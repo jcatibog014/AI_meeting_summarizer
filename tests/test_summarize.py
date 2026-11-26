@@ -174,7 +174,7 @@ def test_practice_mode_costs_nothing(app, owner):
     assert run.practice and run.status == "done" and run.cost_micros == 0
     with app.app_context():
         assert db.session().scalar(select(func.count()).select_from(UsageEntry)) == 0
-    assert "Practice notes" in words(client.get(f"/meetings/{meeting_id}"))
+    assert "Practice notes: made without Claude" in words(client.get(f"/meetings/{meeting_id}"))
 
 
 def test_the_demo_gets_three_real_summaries_a_day(app, demo):

@@ -114,7 +114,7 @@ def test_practice_notes_come_from_the_transcripts_own_words():
     messages = [{"role": "user", "content": [{"type": "text", "text": f"<transcript>\n{transcripts.numbered(lines)}\n</transcript>"}]}]
     reply = FakeClaude().summarize("claude-opus-5-5", SYSTEM, messages)
     notes, problems = schema.validate(reply.text)
-    assert problems == [] and notes.title == "Practice notes"
+    assert problems == [] and notes.title == "Meeting with Maria Santos and Ben Cruz"
     assert [d.evidence[0].line for d in notes.decisions] == [4, 5]
     assert {a.owner for a in notes.action_items} >= {"Ben Cruz", "Ana Reyes"}
     by_line = {line.n: line.text for line in lines}

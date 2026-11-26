@@ -27,6 +27,7 @@ never dropped quietly: the reader decides.
 """
 import logging
 import threading
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
@@ -124,11 +125,12 @@ def expire_stale(s, meeting, moment):
     return False
 
 
-def start(s, app, workspace, meeting, moment, version=PROMPT_VERSION, model=None):
+def start(s, app, workspace, meeting, moment, version=None, model=None):
     """Check the limits and make a queued Run. The caller commits, then calls launch(app, run.id)."""
     if is_busy(meeting, latest_run(s, meeting), moment):
         raise CantStart("This meeting is being summarized already.")
     model = model if model in pricing.MODELS else workspace.model
+    version = version or workspace.prompt_version or PROMPT_VERSION
     try:
         guess = estimate(app, workspace, meeting, version, model)
     except llm.LLMError as error:
@@ -179,46 +181,72 @@ def _work(s, app, run_id):
     s.commit()
 
     lines = meetings.lines_of(meeting)
-    system = system_blocks(run.prompt_version)
-    messages = build_messages(meeting, lines)
-    best, best_problems, best_found = None, [], {}
-    for attempt in range(1, MAX_ATTEMPTS + 1):
-        try:
-            reply = client.summarize(run.model, system, messages, run.effort)
-        except llm.LLMError as error:
-            if error.reply is not None:  # a refused or cut-off answer was still paid for
-                _count(s, run, workspace, error.reply)
-                run.raw_output, run.stop_reason = error.reply.text, error.reply.stop_reason
-            run.attempts = attempt
-            if best is not None:
-                break  # an earlier answer had the right shape: keep it, flagged
-            _fail(s, run, error.code, error.message)
-            return
+
+    def on_reply(reply, attempt):
         _count(s, run, workspace, reply)
         run.attempts, run.raw_output = attempt, reply.text
         run.stop_reason, run.served_model = reply.stop_reason, reply.model
+
+    def on_checked(attempt, problems):
+        _log_issues(s, run, attempt, problems)
+        s.commit()
+
+    outcome = ask_and_check(client, run.model, run.effort, system_blocks(run.prompt_version),
+                            build_messages(meeting, lines), lines, meeting, on_reply, on_checked)
+    if outcome.error is not None:
+        run.attempts = outcome.attempts
+        _fail(s, run, outcome.error.code, outcome.error.message)
+        return
+    if outcome.notes is None:
+        _fail(s, run, "shape", "Claude's answer never had the right shape, even after "
+              f"{MAX_ATTEMPTS - 1} tries to fix it. The Quality Lab lists the problems.")
+        return
+    save_notes(s, meeting, run, outcome.notes, outcome.problems, outcome.found)
+    run.status = "needs_review" if outcome.problems else "done"
+    meeting.status = "needs_review" if outcome.problems else "ready"
+    run.finished_at = utcnow()
+    s.commit()
+
+
+@dataclass
+class Outcome:
+    notes: object | None      # the best MeetingNotes (the right shape), or None
+    problems: list            # what is still wrong with it (each becomes a note's flag)
+    found: dict               # (section, item, quote) -> was the quote on its line?
+    attempts: int
+    error: object | None = None   # an llm.LLMError, when Claude failed before any good shape
+
+
+def ask_and_check(client, model, effort, system, messages, lines, meeting, on_reply=None, on_checked=None):
+    """The loop: ask, check all three layers, send the problems back, at most MAX_ATTEMPTS times.
+    Used by a meeting's summary (above) and by the Quality Lab's test set (evals.py).
+    on_reply(reply, attempt) sees every answer (to count its cost); on_checked(attempt, problems) every check."""
+    best, best_problems, best_found = None, [], {}
+    attempt = 0
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            reply = client.summarize(model, system, messages, effort)
+        except llm.LLMError as error:
+            if error.reply is not None and on_reply:  # a refused or cut-off answer was still paid for
+                on_reply(error.reply, attempt)
+            if best is not None:
+                break  # an earlier answer had the right shape: keep it, flagged
+            return Outcome(None, [], {}, attempt, error)
+        if on_reply:
+            on_reply(reply, attempt)
         notes, problems = schema.validate(reply.text)
         if notes is not None:
             found = {}
             for reviewer in reviewers:
                 problems += reviewer(notes, lines, meeting, found)
             best, best_problems, best_found = notes, problems, found
-        _log_issues(s, run, attempt, problems)
-        s.commit()
-        if not problems or attempt == MAX_ATTEMPTS:
+        if on_checked:
+            on_checked(attempt, problems)
+        if not problems:
             break
         messages = messages + [{"role": "assistant", "content": reply.content},
                                {"role": "user", "content": repair_message(problems)}]
-
-    if best is None:
-        _fail(s, run, "shape", "Claude's answer never had the right shape, even after "
-              f"{MAX_ATTEMPTS - 1} tries to fix it. The Quality Lab lists the problems.")
-        return
-    save_notes(s, meeting, run, best, best_problems, best_found)
-    run.status = "needs_review" if best_problems else "done"
-    meeting.status = "needs_review" if best_problems else "ready"
-    run.finished_at = utcnow()
-    s.commit()
+    return Outcome(best, best_problems, best_found, attempt)
 
 
 def _count(s, run, workspace, reply):

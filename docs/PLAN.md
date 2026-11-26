@@ -160,9 +160,11 @@ Chart and note colours are checked with the dataviz validator.
 - [x] Stage 5: notes page + Review & Proof
 - [x] Stage 6: Action Tracker
 - [x] Stage 7: Export & Share
-- [ ] Stage 8: Quality Lab
+- [x] Stage 8: Quality Lab
 - [ ] Stage 9: demo + finish
 
 ## Where the Build Differs
 
 - **No `messages.parse`:** the SDK's `parse()` checks Claude's JSON with Pydantic itself and raises on a failure, which throws away the raw answer the repair turn needs. So `llm.py` calls `client.beta.messages.create(...)` with `output_config.format` set from `anthropic.transform_schema(MeetingNotes)` (layer 1, the API), and `schema.py` validates the text with Pydantic itself (layer 2). The beta endpoint is used for the refusal fallback (`betas=["server-side-fallback-2026-07-01"]`, `fallbacks="default"`), which the installed SDK (2.14) accepts.
+- **One `eval_runs` table, cases in code:** the plan named `eval_cases` and `eval_results` tables. The six test meetings are fixed, so they live in `evals.py` (reviewed like code), and each run keeps its per-case scores as JSON in `eval_runs.results`.
+- **A prompt choice in Settings:** not in the plan; added so the Quality Lab's comparison of v1 and v2 can be acted on.

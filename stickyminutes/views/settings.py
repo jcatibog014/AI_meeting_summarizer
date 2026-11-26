@@ -6,7 +6,7 @@ only take you to pages. Later stages add sections through `actions` and `extras`
 from flask import Blueprint, abort, current_app, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from .. import budget, db, llm, pricing
+from .. import budget, db, llm, pricing, summarize
 from ..auth import login_required, name_problem, not_for_demo, password_problem, set_password
 from ..dates import is_zone, utcnow, zone_names
 
@@ -44,8 +44,17 @@ def save_model(s, workspace, form):
     return {}, f"New summaries will use {pricing.MODELS[choice].label}."
 
 
+def save_prompt(s, workspace, form):
+    choice = form.get("prompt_version", "")
+    if choice not in summarize.prompt_versions():
+        return {"prompt_version": "Choose a prompt from the list."}, None
+    workspace.prompt_version = choice
+    return {}, f"New summaries will use prompt {choice}."
+
+
 actions["workspace"] = save_workspace
 actions["model"] = save_model
+actions["prompt"] = save_prompt
 
 
 @bp.route("/settings", methods=["GET", "POST"])
@@ -96,4 +105,4 @@ def page():
     data.update(practice=llm.is_practice(app), spent_today=budget.spent_today(s, utcnow()),
                 cap_micros=budget.cap_micros(app))
     return render_template("settings.html", errors=errors, form=request.form, zones=zone_choices(),
-                           models=pricing.MODELS.values(), **data), 400 if errors else 200
+                           models=pricing.MODELS.values(), versions=summarize.prompt_versions(), **data), 400 if errors else 200

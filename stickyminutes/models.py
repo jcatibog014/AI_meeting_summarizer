@@ -30,6 +30,8 @@ class Workspace(Base):
     time_zone: Mapped[str] = mapped_column(String(64), default="Asia/Manila", server_default="Asia/Manila")
     # Which Claude model summarizes (pricing.MODELS). Settings changes it.
     model: Mapped[str] = mapped_column(String(40), default="claude-opus-5-5", server_default="claude-opus-5-5")
+    # Which prompt file writes the notes (prompts/v1.md ...). Settings changes it; the Quality Lab compares them.
+    prompt_version: Mapped[str] = mapped_column(String(20), default="v1", server_default="v1")
     # Part of the calendar feed's signed link (actions.py). A new one ends every old link.
     feed_nonce: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
@@ -211,3 +213,26 @@ class UsageEntry(Base):
     is_demo: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     cost_micros: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class EvalRun(Base):
+    """One run of the Quality Lab's test set (evals.py): every case, one prompt version and model."""
+    __tablename__ = "eval_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    prompt_version: Mapped[str] = mapped_column(String(20))
+    model: Mapped[str] = mapped_column(String(40))
+    practice: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # queued -> running -> done | failed
+    status: Mapped[str] = mapped_column(String(20), default="queued", server_default="queued")
+    cost_micros: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    estimate_micros: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    # One entry per case: {"case", "title", "recall", "owners", "grounding", "attempts", "passed", "made_up", ...}
+    results: Mapped[list] = mapped_column(JSON, default=list)
+    # The averages over the cases (evals.summary).
+    summary: Mapped[dict] = mapped_column(JSON, default=dict)
+    error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime)

@@ -1,0 +1,9 @@
+{# The Quality Lab's three pages, as pills under the title. #}
+<nav aria-label="Quality Lab">
+  <ul class="tabs">
+    {% for endpoint, label in tabs %}
+      {% set current = here == endpoint or (endpoint == 'lab.index' and here == 'lab.run') or (endpoint == 'lab.tests' and here == 'lab.test_run') %}
+      <li><a href="{{ url_for(endpoint) }}"{% if current %} aria-current="page"{% endif %}>{{ label }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>

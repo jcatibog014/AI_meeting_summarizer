@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head, csrf %}
+{% from "_icons.html" import icon %}
+{% block title %}Test Set - Quality Lab - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {{ page_head('Quality Lab') }}
+  {% include "_lab_tabs.html" %}
+  <div class="tests-layout">
+    <section class="card">
+      <h2>Run the Test Set</h2>
+      <p class="muted">Six small meetings whose right answers are known. One of them decides nothing, so any decision there is made up. Each meeting goes through the same checks and repair turns as a real summary.</p>
+      {% if g.user.is_demo and not practice %}
+        <p class="notice-line">The demo can't run the test set: it costs six real summaries. The runs below show what it finds.</p>
+      {% else %}
+        <form method="post" class="stack" data-confirm="{{ 'Run the six test meetings in practice mode (free)?' if practice else 'Run the six test meetings? This makes six real Claude summaries and counts towards the daily spending limit.' }}">
+          {{ csrf() }}
+          <div class="two-fields">
+            <label class="field"><span class="field-label">Prompt</span>
+              <select name="prompt_version">{% for v in versions %}<option value="{{ v }}"{% if v == g.workspace.prompt_version %} selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+            <label class="field"><span class="field-label">Model</span>
+              <select name="model">{% for m in models %}<option value="{{ m.id }}"{% if m.id == g.workspace.model %} selected{% endif %}>{{ m.label }}</option>{% endfor %}</select></label>
+          </div>
+          <div class="form-actions">
+            <span class="muted small">{{ 'Free in practice mode.' if practice else 'About 6 summaries: with Opus 5.5 roughly 15 to 30 cents.' }}</span>
+            <button class="button" type="submit"{% if running %} disabled{% endif %}>{{ icon('lab') }} Run test set</button>
+          </div>
+        </form>
+      {% endif %}
+    </section>
+    <section class="card">
+      <h2>The Six Meetings</h2>
+      <ul class="case-list">
+        {% for case in cases %}
+          <li><strong>{{ case.title }}</strong>
+            <span class="muted small">{% if case.nothing %}Nothing decided: any decision is made up{% else %}{{ plural(case.decisions|length, 'decision') }}, {{ plural(case.actions|length, 'action item') }} expected{% endif %}</span></li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+
+  <section class="card table-wrap compare-card">
+    <h2>Results</h2>
+    {% if runs %}
+      <table class="table">
+        <thead>
+          <tr><th>Run</th><th>Prompt</th><th>Model</th><th class="num">Found</th><th class="num">Right owner</th><th class="num">Quotes on their line</th>
+              <th class="num">Right first time</th><th class="num">Passed</th><th class="num">Made up</th><th class="num">Cost</th></tr>
+        </thead>
+        <tbody>
+          {% for run in runs %}
+            {% set sum = run.summary or {} %}
+            <tr>
+              <td><a href="{{ url_for('lab.test_run', run_id=run.id) }}">{{ run.created_at|when }}</a>
+                {% if run.status in ('queued', 'running') %}<span class="pill pill-accent">Running</span>{% elif run.status == 'failed' %}<span class="pill pill-danger">Failed</span>{% endif %}</td>
+              <td>{{ run.prompt_version }}</td>
+              <td>{{ 'Practice' if run.practice else run.model }}</td>
+              <td class="num">{{ sum.get('recall')|percent }} <meter min="0" max="1" value="{{ sum.get('recall') or 0 }}"></meter></td>
+              <td class="num">{{ sum.get('owners')|percent }}</td>
+              <td class="num">{{ sum.get('grounding')|percent }} <meter min="0" max="1" value="{{ sum.get('grounding') or 0 }}"></meter></td>
+              <td class="num">{{ sum.get('first_try')|percent }}</td>
+              <td class="num">{{ sum.get('passed')|percent }}</td>
+              <td class="num">{{ sum.get('made_up', '–') }}</td>
+              <td class="num">{{ '–' if run.practice else run.cost_micros|dollars }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted small">Found: expected decisions and action items in the notes. Made up: decisions or action items in the meeting where nothing was decided (0 is right).</p>
+    {% else %}
+      <p class="muted">No test runs yet. Run the test set to score a prompt and a model, then change one and run it again to compare.</p>
+    {% endif %}
+  </section>
+{% endblock %}

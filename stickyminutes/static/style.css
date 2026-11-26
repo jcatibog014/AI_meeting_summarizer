@@ -575,3 +575,36 @@ table.table { width: 100%; border-collapse: collapse; }
   .minutes-extra, .minutes-lines, .minutes-facts, .minutes-foot { color: #444; }
   .shared-bar { display: none; }
 }
+
+/* ---------- Quality Lab ---------- */
+.stat-grid { display: grid; gap: 1rem; margin-bottom: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr)); }
+.stat { display: grid; gap: .15rem; background: var(--surface); border: 1px solid var(--rule); border-top: 5px solid var(--note-edge-blue);
+        border-radius: var(--radius); padding: .8rem 1rem; box-shadow: var(--shadow); }
+/* Nunito, not Kalam: Kalam's handwritten 1 looks like an I. */
+.stat-number { font-weight: 700; font-size: 1.75rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stat-label { color: var(--muted); font-size: .875rem; }
+.lab-run { display: grid; gap: 1rem; max-width: 70rem; }
+.lab-run .card + .card { margin-top: 0; }
+.issue-list { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .5rem; }
+.issue-list li { display: flex; gap: .6rem; align-items: flex-start; }
+.issue-list li > span:last-child { overflow-wrap: anywhere; }
+.ok-line { display: flex; align-items: center; gap: .4rem; color: var(--ok); font-weight: 600; }
+.raw-card summary { cursor: pointer; list-style: revert; }
+.raw-card summary h2 { display: inline; }
+.raw-card pre { margin: 1rem 0 0; max-height: 32rem; overflow: auto; background: var(--surface-2); padding: 1rem; border-radius: var(--radius);
+                font-size: .8125rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.layer-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr)); align-items: start; }
+.layer-grid .card + .card { margin-top: 0; }
+.layer-card { border-top: 5px solid var(--note-edge-blue); }
+.layer-rules { border-top-color: var(--note-edge-yellow); }
+.layer-grounding { border-top-color: var(--note-edge-pink); }
+.example { display: block; color: var(--muted); font-size: .8125rem; margin-top: .15rem; overflow-wrap: anywhere; }
+.tests-layout { display: grid; gap: 1rem; margin-bottom: 1rem; align-items: start; }
+.tests-layout .card + .card { margin-top: 0; }
+@media (min-width: 64rem) { .tests-layout { grid-template-columns: 3fr 2fr; } }
+.tests-layout select { max-width: none; }
+.case-list { margin: 0; padding-left: 1.1rem; display: grid; gap: .35rem; }
+.case-list span { display: block; }
+meter { width: 4rem; height: .6rem; vertical-align: middle; }
+.compare-card h2 { margin-bottom: .75rem; }
+.table tfoot th, .table tfoot td { border-top: 2px solid var(--rule); border-bottom: 0; font-weight: 700; }

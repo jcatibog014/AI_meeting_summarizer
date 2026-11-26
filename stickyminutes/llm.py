@@ -212,7 +212,8 @@ def practice_notes(messages):
                 f"{len(speakers) or 'Some'} people spoke over {len(lines)} lines{': ' + people if people else ''}. "
                 f"It found {len(decisions)} decision{'s' if len(decisions) != 1 else ''} and "
                 f"{len(actions[:8])} action item{'s' if len(actions[:8]) != 1 else ''}.")
-    return {"title": "Practice notes", "overview": overview, "key_points": points, "decisions": decisions,
+    title = ("Meeting with " + " and ".join(speakers[:2])) if speakers else "Practice notes"
+    return {"title": title[:80], "overview": overview, "key_points": points, "decisions": decisions,
             "action_items": actions[:8], "open_questions": questions}
 
 
@@ -230,7 +231,7 @@ class FakeClaude:
         return int(len(json.dumps(system)) * self.tokens_per_char + len(json.dumps(messages)) * self.tokens_per_char)
 
     def summarize(self, model, system, messages, effort=EFFORT):
-        self.calls.append({"model": model, "messages": messages, "effort": effort})
+        self.calls.append({"model": model, "system": system, "messages": messages, "effort": effort})
         if self.script is None:
             answer = practice_notes(messages)
         else:

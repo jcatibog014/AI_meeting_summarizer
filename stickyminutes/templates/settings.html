@@ -70,6 +70,19 @@
       </form>
     </section>
 
+    <section class="card" id="prompt">
+      <h2>Prompt</h2>
+      <form method="post" class="row-form">
+        {{ csrf() }}<input type="hidden" name="action" value="prompt"><input type="hidden" name="anchor" value="prompt">
+        <label class="field{% if errors.get('prompt_version') %} has-error{% endif %}">
+          <span class="field-label">The instructions Claude gets <span class="hint">The Quality Lab's test set compares them</span></span>
+          <select name="prompt_version">{% for v in versions %}<option value="{{ v }}"{% if v == form.get('prompt_version', g.workspace.prompt_version) %} selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+          {% if errors.get('prompt_version') %}<p class="field-error">{{ errors.get('prompt_version') }}</p>{% endif %}
+        </label>
+        <button class="button" type="submit" data-watch-changes>Save</button>
+      </form>
+    </section>
+
     {% for section in settings_sections %}{% include section %}{% endfor %}
 
     <section class="card" id="appearance" data-theme-settings>
