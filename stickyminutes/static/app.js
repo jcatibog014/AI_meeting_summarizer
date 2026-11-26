@@ -138,10 +138,11 @@ function setUpAutoSubmit() {
   });
 }
 
-// The Copy button beside a link.
+// The Copy button beside a link or a box of text. It says "Copied" for a moment.
 function setUpCopy() {
   document.querySelectorAll("[data-copy]").forEach((button) => {
     const field = document.getElementById(button.dataset.copy);
+    const original = button.innerHTML;
     button.hidden = false;
     button.addEventListener("click", async () => {
       field.select();
@@ -151,13 +152,19 @@ function setUpCopy() {
         document.execCommand("copy");
       }
       button.textContent = "Copied";
-      setTimeout(() => (button.textContent = "Copy"), 1500);
+      setTimeout(() => (button.innerHTML = original), 1500);
     });
   });
 }
 
-// Messages fade away after a few seconds (errors stay; data-toast-wait sets a longer time);
-// the clock starts again while the mouse or keyboard is on a message. Every message can be closed.
+// The print page's button (Print or save as PDF).
+function setUpPrint() {
+  const button = document.querySelector("[data-print]");
+  if (!button) return;
+  button.hidden = false;
+  button.addEventListener("click", () => window.print());
+}
+
 function setUpToasts() {
   const leave = (toast) => {
     toast.classList.add("is-leaving");
@@ -235,5 +242,5 @@ function setUpLineLinks() {
 
 // Startup: every part looks for its own elements and does nothing if they aren't on the page.
 const setUps = [setUpToasts, setUpWatchChanges, setUpTheme, setUpMenu, setUpPopovers, setUpConfirm,
-  setUpAutoSubmit, setUpCopy, setUpStatusWatch, setUpLineLinks];
+  setUpAutoSubmit, setUpCopy, setUpStatusWatch, setUpLineLinks, setUpPrint];
 document.addEventListener("DOMContentLoaded", () => setUps.forEach((setUp) => setUp()));

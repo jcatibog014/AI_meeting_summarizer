@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_minutes.html" import minutes %}
+{% from "_icons.html" import icon %}
+{% block title %}{{ meeting.title }} (Print) - {{ APP_NAME }}{% endblock %}
+{% block body_class %}print-page{% endblock %}
+{% block layout %}
+  <div class="print-bar no-print">
+    <a class="back-link" href="{{ url_for('meetings.show', meeting_id=meeting.id) }}">&larr; Back to the meeting</a>
+    <button class="button" type="button" data-print hidden>{{ icon('printer') }} Print or save as PDF</button>
+    <p class="muted small no-js-only">Use your browser's Print (Ctrl+P) and choose “Save as PDF”.</p>
+  </div>
+  <main id="main" class="print-sheet">
+    {{ minutes(meeting, items, sections, lines_label, due_words) }}
+  </main>
+{% endblock %}

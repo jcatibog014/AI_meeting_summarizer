@@ -38,6 +38,7 @@
 
     <aside class="meeting-side">
       {% include "_summary_side.html" %}
+      {% include "_export_side.html" %}
       <section class="card">
         <h2>Details</h2>
         <form method="post" action="{{ url_for('meetings.edit', meeting_id=meeting.id) }}" class="stack">

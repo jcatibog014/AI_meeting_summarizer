@@ -94,6 +94,9 @@ class Meeting(Base):
     status: Mapped[str] = mapped_column(String(20), default="new", server_default="new")
     # The summary's 2-4 sentences, from the accepted run (summarize.py).
     overview: Mapped[str | None] = mapped_column(Text)
+    # The read-only share link (exports.py): None = off. Turning it on again makes a new number,
+    # so an old link never comes back to life.
+    share_nonce: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 

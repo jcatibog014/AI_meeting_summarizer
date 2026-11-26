@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head %}
+{% from "_icons.html" import icon %}
+{% block title %}Email the Minutes - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {{ page_head('Email the Minutes', back=url_for('meetings.show', meeting_id=meeting.id, _anchor='export'), back_label=meeting.title) }}
+  <section class="card email-card">
+    <p class="muted">Copy these words into an email, a chat or a document. Rejected notes are left out.</p>
+    <label class="visually-hidden" for="email-body">The minutes as text</label>
+    <textarea id="email-body" readonly>{{ body }}</textarea>
+    <div class="form-actions start">
+      <button class="button" type="button" data-copy="email-body" hidden>{{ icon('copy') }} Copy</button>
+      {% if mailto %}<a class="button button-quiet" href="{{ mailto }}">{{ icon('mail') }} Open in my email app</a>{% endif %}
+    </div>
+  </section>
+{% endblock %}

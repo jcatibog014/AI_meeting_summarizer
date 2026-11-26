@@ -159,7 +159,7 @@ Chart and note colours are checked with the dataviz validator.
 - [x] Stage 4: validation and repair
 - [x] Stage 5: notes page + Review & Proof
 - [x] Stage 6: Action Tracker
-- [ ] Stage 7: Export & Share
+- [x] Stage 7: Export & Share
 - [ ] Stage 8: Quality Lab
 - [ ] Stage 9: demo + finish
 
