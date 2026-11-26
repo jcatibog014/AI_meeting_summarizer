@@ -89,14 +89,14 @@ def create_app(test_config=None):
             raise RuntimeError("Set the DATABASE_URL environment variable on Render (Neon's connection string).")
 
     from . import auth, db, formatting, seed
-    from .views import demo, meetings, review, settings, summaries
+    from .views import actions, demo, meetings, review, settings, summaries
 
     db.init_app(app)
     auth.init_app(app)
     formatting.init_app(app)
     seed.init_app(app)
     # auth comes first: its before_request (load_user) must run before the others'.
-    for blueprint in (auth.bp, meetings.bp, summaries.bp, review.bp, settings.bp, demo.bp):
+    for blueprint in (auth.bp, meetings.bp, summaries.bp, review.bp, actions.bp, settings.bp, demo.bp):
         app.register_blueprint(blueprint)
 
     from .dates import utcnow

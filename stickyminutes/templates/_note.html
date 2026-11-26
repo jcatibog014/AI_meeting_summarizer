@@ -52,6 +52,10 @@
           <form method="post" action="{{ url_for('review.decide', item_id=item.id) }}">{{ csrf() }}<input type="hidden" name="decision" value="undo">
             <button class="note-button" type="submit">{{ icon('retry', 14) }} Undo</button></form>
         {% endif %}
+        {% if item.kind == 'action' and has_page('actions.done') %}
+          <form method="post" action="{{ url_for('actions.done', item_id=item.id) }}">{{ csrf() }}<input type="hidden" name="done" value="{{ '0' if item.status == 'done' else '1' }}">
+            <button class="note-button" type="submit">{{ icon('retry' if item.status == 'done' else 'check', 14) }} {{ 'Reopen' if item.status == 'done' else 'Done' }}</button></form>
+        {% endif %}
         <a class="note-button note-icon" href="{{ url_for('review.edit', item_id=item.id) }}" title="Edit this note" aria-label="Edit">{{ icon('pencil', 15) }}</a>
         {% if caller %}{{ caller() }}{% endif %}
       </div>

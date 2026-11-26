@@ -30,6 +30,8 @@ class Workspace(Base):
     time_zone: Mapped[str] = mapped_column(String(64), default="Asia/Manila", server_default="Asia/Manila")
     # Which Claude model summarizes (pricing.MODELS). Settings changes it.
     model: Mapped[str] = mapped_column(String(40), default="claude-opus-5-5", server_default="claude-opus-5-5")
+    # Part of the calendar feed's signed link (actions.py). A new one ends every old link.
+    feed_nonce: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     users: Mapped[list["User"]] = relationship(back_populates="workspace", cascade="all, delete-orphan",
