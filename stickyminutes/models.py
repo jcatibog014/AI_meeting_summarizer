@@ -10,7 +10,7 @@ adding up many small Claude calls never collects float rounding errors.
 """
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, false
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, false, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .dates import utcnow
@@ -70,3 +70,45 @@ class RateLimit(Base):
     key: Mapped[str] = mapped_column(String(200), primary_key=True)
     count: Mapped[int] = mapped_column(Integer, default=0)
     window_start: Mapped[datetime] = mapped_column(DateTime)
+
+
+class Meeting(Base):
+    """One meeting: its transcript (as TranscriptLine rows) and, once summarized, its notes."""
+    __tablename__ = "meetings"
+    __table_args__ = {"sqlite_autoincrement": True}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(120))
+    # False while the title is our own stand-in ("Meeting on 24 Nov"): the summary may then name it.
+    title_from_user: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
+    meeting_date: Mapped[date] = mapped_column(Date)
+    source_kind: Mapped[str] = mapped_column(String(10))        # transcripts.KINDS
+    source_name: Mapped[str | None] = mapped_column(String(200))  # the uploaded file's name
+    line_count: Mapped[int] = mapped_column(Integer, default=0)
+    word_count: Mapped[int] = mapped_column(Integer, default=0)
+    speakers: Mapped[list] = mapped_column(JSON, default=list)
+    # new -> queued -> running -> ready | needs_review | failed (summarize.py)
+    status: Mapped[str] = mapped_column(String(20), default="new", server_default="new")
+    # The summary's 2-4 sentences, from the accepted run (summarize.py).
+    overview: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+    lines: Mapped[list["TranscriptLine"]] = relationship(back_populates="meeting", order_by="TranscriptLine.n",
+                                                         cascade="all, delete-orphan", passive_deletes=True)
+
+
+class TranscriptLine(Base):
+    """One numbered line of a transcript. The numbers never change once saved: notes point at them."""
+    __tablename__ = "transcript_lines"
+    __table_args__ = (UniqueConstraint("meeting_id", "n"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    meeting_id: Mapped[int] = mapped_column(ForeignKey("meetings.id", ondelete="CASCADE"))
+    n: Mapped[int] = mapped_column(Integer)
+    speaker: Mapped[str | None] = mapped_column(String(60))
+    at: Mapped[str | None] = mapped_column(String(16))
+    text: Mapped[str] = mapped_column(Text)
+
+    meeting: Mapped[Meeting] = relationship(back_populates="lines")

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head, csrf, field %}
+{% from "_icons.html" import icon %}
+{% block title %}{{ meeting.title }} - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {% call page_head(meeting.title, back=url_for('meetings.index'), back_label='Meetings') %}
+    {% block head_actions %}{% endblock %}
+  {% endcall %}
+  {% set words, style = meeting_status(meeting) %}
+  <p class="meeting-facts">
+    <span class="pill {{ style }}" data-meeting-status>{{ words }}</span>
+    <span>{{ icon('calendar', 16) }} {{ meeting.meeting_date|day }}</span>
+    <span>{{ icon('user', 16) }} {{ plural(meeting.speakers|length, 'speaker') }}</span>
+    <span>{{ icon('file', 16) }} {{ plural(meeting.line_count, 'line') }} · {{ meeting.word_count|number }} words</span>
+  </p>
+
+  {% block notes %}{% endblock %}
+
+  <div class="meeting-layout">
+    <section class="card transcript" id="transcript" aria-labelledby="transcript-title">
+      <div class="row-between">
+        <h2 id="transcript-title">Transcript</h2>
+        <span class="muted small">{{ kinds.get(meeting.source_kind, '') }}{% if meeting.source_name %}: {{ meeting.source_name }}{% endif %}</span>
+      </div>
+      {% if meeting.speakers %}
+        <p class="speaker-list">{% for name in meeting.speakers %}<span class="pill">{{ name }}</span>{% endfor %}</p>
+      {% endif %}
+      <ol class="lines">
+        {% for line in meeting.lines %}
+          <li id="line-{{ line.n }}" data-line="{{ line.n }}">
+            <span class="line-n">{{ line.n }}</span>
+            <span class="line-body">
+              <span class="line-who">{{ line.speaker or 'Unknown speaker' }}{% if line.at %} <span class="line-at">{{ line.at }}</span>{% endif %}</span>
+              <span class="line-text">{{ line.text }}</span>
+            </span>
+          </li>
+        {% endfor %}
+      </ol>
+    </section>
+
+    <aside class="meeting-side">
+      {% block side %}{% endblock %}
+      <section class="card">
+        <h2>Details</h2>
+        <form method="post" action="{{ url_for('meetings.edit', meeting_id=meeting.id) }}" class="stack">
+          {{ csrf() }}
+          {{ field('title', 'Title', meeting.title, attrs='maxlength="120" required') }}
+          {{ field('meeting_date', 'Date', meeting.meeting_date.isoformat(), type='date', attrs='required') }}
+          <div class="form-actions"><button class="button" type="submit" data-watch-changes>Save</button></div>
+        </form>
+      </section>
+      <section class="card">
+        <h2>Delete Meeting</h2>
+        <form method="post" action="{{ url_for('meetings.delete', meeting_id=meeting.id) }}" class="row-between"
+              data-confirm="Delete “{{ meeting.title }}”, its transcript and its notes? This can't be undone.">
+          {{ csrf() }}
+          <p class="muted">The transcript and its notes go too.</p>
+          <button class="button button-danger" type="submit">Delete meeting</button>
+        </form>
+      </section>
+    </aside>
+  </div>
+{% endblock %}

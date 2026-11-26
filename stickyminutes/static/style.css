@@ -343,3 +343,62 @@ table.table { width: 100%; border-collapse: collapse; }
   body { background: #fff; }
   .app { display: block; }
 }
+
+/* ---------- Meetings: index cards pinned on the board ---------- */
+.meeting-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.25rem;
+                grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr)); }
+.meeting-card a { position: relative; display: grid; gap: .35rem; height: 100%; padding: 1.4rem 1.1rem 1rem;
+                  background: var(--surface); color: var(--ink); text-decoration: none; border-radius: 3px;
+                  box-shadow: var(--note-shadow); border: 1px solid var(--rule); transition: transform .15s; }
+.meeting-card:nth-child(3n + 1) a { transform: rotate(-.6deg); }
+.meeting-card:nth-child(3n + 2) a { transform: rotate(.5deg); }
+.meeting-card a:hover, .meeting-card a:focus-visible { transform: translateY(-2px) rotate(0); }
+/* A strip of tape across the top. */
+.meeting-card a::before { content: ""; position: absolute; top: -.55rem; left: 50%; width: 4.5rem; height: 1.1rem;
+                          transform: translateX(-50%) rotate(-2deg); background: var(--note-yellow);
+                          opacity: .9; border: 1px solid var(--note-edge-yellow); }
+.meeting-card-date { font-size: .8125rem; color: var(--muted); font-weight: 700; }
+.meeting-card-title { font-family: var(--hand); font-weight: 700; font-size: 1.3rem; line-height: 1.2; overflow-wrap: anywhere; }
+.meeting-card-text { color: var(--muted); font-size: .9375rem; }
+.meeting-card-foot { display: flex; flex-wrap: wrap; gap: .4rem .6rem; align-items: center; margin-top: auto; padding-top: .5rem; }
+
+/* ---------- New meeting ---------- */
+.new-meeting { max-width: 56rem; }
+.new-meeting textarea { max-width: none; min-height: 16rem; }
+.two-fields { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
+.two-fields input { max-width: none; }
+.drop-box { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; padding: 1rem; border: 2px dashed var(--control-border);
+            border-radius: var(--radius); background: var(--surface-2); cursor: pointer; }
+.drop-box:hover { border-color: var(--accent); }
+.drop-box input { flex: 1 1 14rem; }
+.or-line.wide { width: 100%; margin: .5rem 0; }
+.help-card { max-width: 56rem; margin-top: 1rem; }
+.plain-list { margin: 0; padding-left: 1.2rem; display: grid; gap: .35rem; }
+
+/* ---------- A meeting's page ---------- */
+.meeting-facts { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; align-items: center; color: var(--muted); margin: -.5rem 0 1.25rem; }
+.meeting-facts > span { display: inline-flex; align-items: center; gap: .35rem; }
+.meeting-facts .pill { color: inherit; }
+.meeting-facts .pill-ok { color: var(--ok); }
+.meeting-facts .pill-warn { color: var(--warn); }
+.meeting-facts .pill-danger { color: var(--danger); }
+.meeting-facts .pill-accent { color: var(--link); }
+.meeting-layout { display: grid; gap: 1.25rem; align-items: start; }
+.meeting-side { display: grid; gap: 1rem; }
+.meeting-side .card + .card { margin-top: 0; }
+.meeting-side input { max-width: none; }
+@media (min-width: 72rem) {
+  .meeting-layout { grid-template-columns: minmax(0, 1fr) 21rem; }
+  .meeting-side { position: sticky; top: 1rem; }
+}
+.speaker-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+.lines { list-style: none; margin: 0; padding: 0; }
+.lines li { display: grid; grid-template-columns: 2.6rem 1fr; gap: .5rem; padding: .45rem .4rem; border-radius: 4px;
+            scroll-margin-top: 5rem; }
+.lines li + li { border-top: 1px dashed var(--rule); }
+.line-n { color: var(--muted); font-size: .8125rem; font-variant-numeric: tabular-nums; text-align: right; padding-top: .15rem; }
+.line-body { display: grid; min-width: 0; }
+.line-who { font-weight: 700; font-size: .9375rem; }
+.line-at { font-weight: 400; color: var(--muted); font-size: .8125rem; margin-left: .3rem; }
+.line-text { overflow-wrap: anywhere; }
+.lines li:target, .lines li.is-lit { background: var(--highlight); }
