@@ -195,7 +195,45 @@ function setUpWatchChanges() {
   });
 }
 
+// While a summary runs, ask the server how it is going every 2 seconds; reload when it is done.
+// (Without JavaScript the page says to reload it.)
+function setUpStatusWatch() {
+  const box = document.querySelector("[data-status-url]");
+  if (!box) return;
+  const words = box.querySelector("[data-status-words]");
+  let misses = 0;
+  const check = async () => {
+    try {
+      const response = await fetch(box.dataset.statusUrl, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(String(response.status));
+      const state = await response.json();
+      misses = 0;
+      if (state.finished) return window.location.reload();
+      if (words && state.attempts > 1) words.textContent = `Checking and fixing the notes (try ${state.attempts})...`;
+    } catch (error) {
+      misses += 1; // a lost connection: keep asking, a little slower
+    }
+    setTimeout(check, misses ? 5000 : 2000);
+  };
+  setTimeout(check, 2000);
+}
+
+// An evidence chip ("Line 12") lights up that transcript line and scrolls to it.
+function setUpLineLinks() {
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("[data-line-link]");
+    if (!link) return;
+    const line = document.getElementById(`line-${link.dataset.lineLink}`);
+    if (!line) return;
+    event.preventDefault();
+    document.querySelectorAll(".lines li.is-lit").forEach((lit) => lit.classList.remove("is-lit"));
+    line.classList.add("is-lit");
+    line.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    history.replaceState(null, "", `#line-${link.dataset.lineLink}`);
+  });
+}
+
 // Startup: every part looks for its own elements and does nothing if they aren't on the page.
 const setUps = [setUpToasts, setUpWatchChanges, setUpTheme, setUpMenu, setUpPopovers, setUpConfirm,
-  setUpAutoSubmit, setUpCopy];
+  setUpAutoSubmit, setUpCopy, setUpStatusWatch, setUpLineLinks];
 document.addEventListener("DOMContentLoaded", () => setUps.forEach((setUp) => setUp()));

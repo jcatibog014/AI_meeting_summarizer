@@ -3,9 +3,7 @@
 {% from "_icons.html" import icon %}
 {% block title %}{{ meeting.title }} - {{ APP_NAME }}{% endblock %}
 {% block content %}
-  {% call page_head(meeting.title, back=url_for('meetings.index'), back_label='Meetings') %}
-    {% block head_actions %}{% endblock %}
-  {% endcall %}
+  {{ page_head(meeting.title, back=url_for('meetings.index'), back_label='Meetings') }}
   {% set words, style = meeting_status(meeting) %}
   <p class="meeting-facts">
     <span class="pill {{ style }}" data-meeting-status>{{ words }}</span>
@@ -14,7 +12,7 @@
     <span>{{ icon('file', 16) }} {{ plural(meeting.line_count, 'line') }} · {{ meeting.word_count|number }} words</span>
   </p>
 
-  {% block notes %}{% endblock %}
+  {% include "_notes.html" %}
 
   <div class="meeting-layout">
     <section class="card transcript" id="transcript" aria-labelledby="transcript-title">
@@ -39,7 +37,7 @@
     </section>
 
     <aside class="meeting-side">
-      {% block side %}{% endblock %}
+      {% include "_summary_side.html" %}
       <section class="card">
         <h2>Details</h2>
         <form method="post" action="{{ url_for('meetings.edit', meeting_id=meeting.id) }}" class="stack">

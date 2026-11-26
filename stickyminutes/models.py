@@ -112,3 +112,97 @@ class TranscriptLine(Base):
     text: Mapped[str] = mapped_column(Text)
 
     meeting: Mapped[Meeting] = relationship(back_populates="lines")
+
+
+class Run(Base):
+    """One summary of one meeting: every Claude call it took, what they cost, and how it ended."""
+    __tablename__ = "runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    meeting_id: Mapped[int] = mapped_column(ForeignKey("meetings.id", ondelete="CASCADE"), index=True)
+    # queued -> running -> done | needs_review | failed
+    status: Mapped[str] = mapped_column(String(20), default="queued", server_default="queued")
+    model: Mapped[str] = mapped_column(String(40))                 # the model asked for
+    served_model: Mapped[str | None] = mapped_column(String(40))   # the one that answered (a fallback may step in)
+    prompt_version: Mapped[str] = mapped_column(String(20))
+    effort: Mapped[str] = mapped_column(String(10), default="medium", server_default="medium")
+    practice: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    input_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    output_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    cache_read_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    cache_write_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    cost_micros: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    estimate_micros: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    stop_reason: Mapped[str | None] = mapped_column(String(30))
+    error_code: Mapped[str | None] = mapped_column(String(30))
+    error: Mapped[str | None] = mapped_column(Text)
+    raw_output: Mapped[str | None] = mapped_column(Text)           # the last answer, as Claude wrote it
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    meeting: Mapped[Meeting] = relationship()
+    issues: Mapped[list["RunIssue"]] = relationship(back_populates="run", order_by="RunIssue.id",
+                                                    cascade="all, delete-orphan", passive_deletes=True)
+
+    @property
+    def seconds(self):
+        if self.started_at and self.finished_at:
+            return (self.finished_at - self.started_at).total_seconds()
+        return None
+
+
+class RunIssue(Base):
+    """One problem one attempt's answer had (schema.Problem), and whether a later attempt fixed it."""
+    __tablename__ = "run_issues"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), index=True)
+    attempt: Mapped[int] = mapped_column(Integer)
+    layer: Mapped[str] = mapped_column(String(20))     # schema, rules, grounding
+    path: Mapped[str] = mapped_column(String(120), default="")
+    message: Mapped[str] = mapped_column(Text)
+    fixed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+
+    run: Mapped[Run] = relationship(back_populates="issues")
+
+
+class Item(Base):
+    """One note on the board: a key point, a decision, an action item or an open question."""
+    __tablename__ = "items"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    meeting_id: Mapped[int] = mapped_column(ForeignKey("meetings.id", ondelete="CASCADE"), index=True)
+    run_id: Mapped[int | None] = mapped_column(ForeignKey("runs.id", ondelete="SET NULL"), index=True)
+    kind: Mapped[str] = mapped_column(String(10))      # point, decision, action, question
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    text: Mapped[str] = mapped_column(Text)
+    detail: Mapped[str | None] = mapped_column(Text)   # a decision's reason
+    owner: Mapped[str | None] = mapped_column(String(60))
+    due_phrase: Mapped[str | None] = mapped_column(String(80))
+    due_date: Mapped[date | None] = mapped_column(Date)
+    priority: Mapped[str | None] = mapped_column(String(10))
+    # Action items: open or done.
+    status: Mapped[str] = mapped_column(String(10), default="open", server_default="open")
+    done_at: Mapped[datetime | None] = mapped_column(DateTime)
+    # Review & Proof: unreviewed, accepted or rejected; flag says why a check doubted it.
+    review: Mapped[str] = mapped_column(String(12), default="unreviewed", server_default="unreviewed")
+    flag: Mapped[str | None] = mapped_column(Text)
+    # [{"line": 12, "quote": "...", "found": true}, ...]
+    evidence: Mapped[list] = mapped_column(JSON, default=list)
+    edited: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class UsageEntry(Base):
+    """What one Claude call cost, for the daily spending cap (budget.py). Kept when a demo is deleted."""
+    __tablename__ = "usage_ledger"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspaces.id", ondelete="SET NULL"), index=True)
+    run_id: Mapped[int | None] = mapped_column(ForeignKey("runs.id", ondelete="SET NULL"), index=True)
+    day: Mapped[date] = mapped_column(Date, index=True)  # the UTC day
+    is_demo: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    cost_micros: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)

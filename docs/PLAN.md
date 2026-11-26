@@ -155,7 +155,7 @@ Chart and note colours are checked with the dataviz validator.
 
 - [x] Stage 1: setup, owner login, Try Demo, Settings, the sticky notes look
 - [x] Stage 2: transcripts
-- [ ] Stage 3: LLM core
+- [x] Stage 3: LLM core
 - [ ] Stage 4: validation and repair
 - [ ] Stage 5: notes page + Review & Proof
 - [ ] Stage 6: Action Tracker

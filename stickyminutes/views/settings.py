@@ -3,12 +3,12 @@
 Settings holds every control and preference (the theme, Log out); the menus
 only take you to pages. Later stages add sections through `actions` and `extras`.
 """
-from flask import Blueprint, abort, flash, g, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, current_app, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from .. import db, pricing
+from .. import budget, db, llm, pricing
 from ..auth import login_required, name_problem, not_for_demo, password_problem, set_password
-from ..dates import is_zone, zone_names
+from ..dates import is_zone, utcnow, zone_names
 
 bp = Blueprint("settings", __name__)
 # Sections that later modules add: action name -> function(s, workspace, form) -> (errors, message)
@@ -92,5 +92,8 @@ def page():
         found = extra(s, g.workspace)
         data["settings_sections"] += found.pop("settings_sections", [])
         data.update(found)
+    app = current_app._get_current_object()
+    data.update(practice=llm.is_practice(app), spent_today=budget.spent_today(s, utcnow()),
+                cap_micros=budget.cap_micros(app))
     return render_template("settings.html", errors=errors, form=request.form, zones=zone_choices(),
                            models=pricing.MODELS.values(), **data), 400 if errors else 200

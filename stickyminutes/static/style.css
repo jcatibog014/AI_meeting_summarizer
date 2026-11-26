@@ -402,3 +402,72 @@ table.table { width: 100%; border-collapse: collapse; }
 .line-at { font-weight: 400; color: var(--muted); font-size: .8125rem; margin-left: .3rem; }
 .line-text { overflow-wrap: anywhere; }
 .lines li:target, .lines li.is-lit { background: var(--highlight); }
+
+/* ---------- Summarizing, notices ---------- */
+.working { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.25rem; }
+.working h2 { margin: 0 0 .2rem; }
+.working p { margin: 0; }
+.spinner { flex: none; width: 2rem; height: 2rem; border-radius: 50%; border: 4px solid var(--accent-soft);
+           border-top-color: var(--accent); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+.notice { display: flex; gap: .8rem; align-items: flex-start; margin-bottom: 1.25rem; border-left: 5px solid var(--accent); }
+.notice > svg { flex: none; margin-top: .3rem; }
+.notice h2 { margin: 0 0 .2rem; font-size: 1.2rem; }
+.notice p { margin: 0; }
+.notice-warn { border-left-color: var(--warn); }
+.notice-warn > svg { color: var(--warn); }
+.notice-danger { border-left-color: var(--danger); }
+.notice-danger > svg { color: var(--danger); }
+
+/* ---------- The notes board ---------- */
+.overview { max-width: 60rem; margin: 0 0 1.5rem; }
+.overview > p:first-of-type { font-size: 1.125rem; }
+.overview svg { vertical-align: -2px; }
+.board { display: grid; gap: 1.5rem; margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
+.board-column h2 { display: flex; align-items: center; gap: .5rem; padding-bottom: .35rem; margin-bottom: .9rem;
+                   border-bottom: 4px solid var(--note-edge); }
+.column-count { font-family: var(--font); font-size: .8125rem; font-weight: 700; padding: .05rem .5rem; border-radius: 999px;
+                background: var(--note-bg); color: var(--note-ink); }
+.column-green { --note-bg: var(--note-green); --note-edge: var(--note-edge-green); }
+.column-blue { --note-bg: var(--note-blue); --note-edge: var(--note-edge-blue); }
+.column-yellow { --note-bg: var(--note-yellow); --note-edge: var(--note-edge-yellow); }
+.column-pink { --note-bg: var(--note-pink); --note-edge: var(--note-edge-pink); }
+.column-empty { color: var(--muted); font-style: italic; }
+.notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+.note { position: relative; background: var(--note-bg); color: var(--note-ink); padding: .95rem 1rem .75rem;
+        box-shadow: var(--note-shadow); border-top: 6px solid var(--note-edge); border-radius: 2px; scroll-margin-top: 5rem; }
+.notes > .note:nth-child(odd) { transform: rotate(-.7deg); }
+.notes > .note:nth-child(even) { transform: rotate(.6deg); }
+.notes > .note:focus-within, .notes > .note:target { transform: none; }
+.note p { margin: 0 0 .45rem; }
+.note-text { font-weight: 600; overflow-wrap: anywhere; }
+.note-detail, .note-meta { font-size: .9375rem; color: var(--note-muted); }
+.note-meta { display: flex; flex-wrap: wrap; gap: .25rem .9rem; }
+.note-meta > span { display: inline-flex; align-items: center; gap: .3rem; }
+.note-meta .muted { color: var(--note-muted); }
+.priority-high { font-weight: 700; color: var(--danger); }
+.note-flag { display: flex; gap: .35rem; align-items: flex-start; font-size: .875rem; font-weight: 600; color: var(--note-ink);
+             background: var(--surface); border: 1px dashed var(--warn); border-radius: 4px; padding: .3rem .5rem; }
+.note-flag svg { flex: none; margin-top: .2rem; color: var(--warn); }
+.note.is-flagged { outline: 2px dashed var(--warn); outline-offset: 3px; }
+.note.is-rejected { opacity: .55; }
+.note.is-rejected .note-text { text-decoration: line-through; }
+.evidence { display: flex; flex-wrap: wrap; gap: .35rem; margin: .2rem 0 0 !important; }
+.chip { display: inline-flex; align-items: center; gap: .25rem; font-size: .8125rem; font-weight: 700; padding: .1rem .5rem;
+        border-radius: 999px; background: var(--surface); color: var(--note-ink); border: 1px solid var(--control-border); text-decoration: none; }
+.chip:hover { border-color: var(--note-ink); }
+.chip-found svg { color: var(--ok); }
+.chip-missing { border-style: dashed; border-color: var(--danger); }
+.chip-missing svg { color: var(--danger); }
+.facts { margin: 0 0 .75rem; display: grid; gap: .3rem; }
+.facts > div { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px dashed var(--rule); padding-bottom: .25rem; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; text-align: right; }
+.summary-card .small svg { vertical-align: -2px; }
+.notice-line { background: var(--warn-soft); color: var(--ink); border-left: 4px solid var(--warn); padding: .5rem .75rem; border-radius: 4px; }
+/* On narrower screens the Summary card (with its button) comes before the transcript. */
+@media (max-width: 71.99rem) {
+  .meeting-side { display: contents; }
+  .meeting-side > .summary-card { order: -1; }
+}

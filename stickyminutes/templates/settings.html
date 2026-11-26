@@ -48,6 +48,11 @@
 
     <section class="card" id="model">
       <h2>Claude Model</h2>
+      {% if practice %}
+        <p class="notice-line">Practice mode: there is no <code>ANTHROPIC_API_KEY</code>, so summaries are free practice notes made from the transcript's words. Add the key to use Claude.</p>
+      {% elif not g.user.is_demo %}
+        <p class="muted">Spent on Claude today: <strong>{{ spent_today|dollars }}</strong> of the daily limit, {{ cap_micros|dollars }} (<code>DAILY_CAP_CENTS</code>).</p>
+      {% endif %}
       <form method="post" class="stack">
         {{ csrf() }}<input type="hidden" name="action" value="model"><input type="hidden" name="anchor" value="model">
         <fieldset class="choices">
