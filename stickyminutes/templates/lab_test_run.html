@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head %}
+{% block title %}Test Run - Quality Lab - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {{ page_head('Test Run Details', back=url_for('lab.tests'), back_label='Test Set') }}
+  <p class="meeting-facts">
+    <span>Prompt {{ run.prompt_version }}</span>
+    <span>{{ 'Sample (not made by Claude)' if run.sample else 'Practice (no API key)' if run.practice else model.label }}</span>
+    <span>{{ run.created_at|when }}</span>
+    {% if not run.practice and not run.sample %}<span>{{ run.cost_micros|dollars }}</span>{% endif %}
+  </p>
+  {% if run.status in ('queued', 'running') %}
+    <section class="card working" data-status-url="{{ url_for('lab.test_status', run_id=run.id) }}" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <div><h2>Running the Test Set&hellip;</h2><p class="muted">{{ run.results|length }} of {{ cases|length }} meetings done. The page updates by itself.</p></div>
+    </section>
+  {% elif run.status == 'failed' %}
+    <p class="form-error">{{ run.error or 'The test run failed.' }}</p>
+  {% endif %}
+  <div class="card table-wrap">
+    <table class="table">
+      <thead><tr><th>Meeting</th><th class="num">Found</th><th class="num">Right owner</th><th class="num">Quotes on their line</th>
+                 <th class="num">Tries</th><th>First time</th><th>Passed</th><th class="num">Made up</th><th class="num">Time</th></tr></thead>
+      <tbody>
+        {% for case in cases %}
+          {% set r = by_case.get(case.key) %}
+          <tr>
+            <td><strong>{{ case.title }}</strong>{% if r and r.get('error') %}<span class="example">{{ r.error }}</span>{% endif %}</td>
+            {% if r %}
+              <td class="num">{{ r.get('recall')|percent }}</td>
+              <td class="num">{{ r.get('owners')|percent }}</td>
+              <td class="num">{{ r.get('grounding')|percent }}</td>
+              <td class="num">{{ r.get('attempts') }}</td>
+              <td>{{ 'Yes' if r.get('first_try') else 'No' }}</td>
+              <td><span class="pill {{ 'pill-ok' if r.get('passed') else 'pill-warn' }}">{{ 'Yes' if r.get('passed') else 'No' }}</span></td>
+              <td class="num">{{ '–' if r.get('made_up') is none else r.made_up }}</td>
+              <td class="num">{{ r.get('seconds')|seconds }}</td>
+            {% else %}
+              <td colspan="8" class="muted">Waiting&hellip;</td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+      {% if run.summary %}
+        <tfoot>
+          <tr><th>Average</th><td class="num">{{ run.summary.get('recall')|percent }}</td><td class="num">{{ run.summary.get('owners')|percent }}</td>
+              <td class="num">{{ run.summary.get('grounding')|percent }}</td><td class="num">{{ '%.1f'|format(run.summary.get('attempts') or 0) }}</td>
+              <td>{{ run.summary.get('first_try')|percent }}</td><td>{{ run.summary.get('passed')|percent }}</td>
+              <td class="num">{{ run.summary.get('made_up') }}</td><td class="num">{{ run.summary.get('seconds')|seconds }}</td></tr>
+        </tfoot>
+      {% endif %}
+    </table>
+  </div>
+{% endblock %}

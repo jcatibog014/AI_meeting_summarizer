@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head, csrf, field, select %}
+{% from "_icons.html" import icon %}
+{% block title %}Edit Note - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {{ page_head('Edit ' ~ kind_word.title(), back=url_for('meetings.show', meeting_id=meeting.id, _anchor='item-' ~ item.id), back_label=meeting.title) }}
+  <div class="edit-layout">
+    <form method="post" class="card stack">
+      {{ csrf() }}
+      <label class="field{% if errors.get('text') %} has-error{% endif %}">
+        <span class="field-label">{{ 'Task' if item.kind == 'action' else 'Note' }}</span>
+        <textarea name="text" class="short" maxlength="300" required>{{ form.get('text', item.text) }}</textarea>
+        {% if errors.get('text') %}<p class="field-error">{{ errors.get('text') }}</p>{% endif %}
+      </label>
+      {% if item.kind == 'decision' %}
+        {{ field('detail', 'Why', form.get('detail', item.detail), errors.get('detail'), hint='Optional', attrs='maxlength="300"') }}
+      {% endif %}
+      {% if item.kind == 'action' %}
+        <div class="two-fields">
+          {{ select('owner', 'Owner', owners, form.get('owner', item.owner or ''), errors.get('owner')) }}
+          {{ field('due_date', 'Due', form.get('due_date', item.due_date.isoformat() if item.due_date else ''), errors.get('due_date'), type='date', hint=('Said: “' ~ item.due_phrase ~ '”') if item.due_phrase else 'Optional') }}
+        </div>
+        {{ select('priority', 'Priority', [('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], form.get('priority', item.priority or 'medium'), errors.get('priority')) }}
+      {% endif %}
+      <p class="muted small">Saving marks the note as checked by you.</p>
+      <div class="form-actions">
+        <a class="button button-quiet" href="{{ url_for('meetings.show', meeting_id=meeting.id, _anchor='item-' ~ item.id) }}">Cancel</a>
+        <button class="button" type="submit">Save</button>
+      </div>
+    </form>
+    <section class="card proof-card">
+      <h2>Proof</h2>
+      <p class="muted small">What Claude quoted, and the transcript line it points at.</p>
+      <ul class="proof-list">
+        {% for e in item.evidence %}
+          {% set line = lines.get(e.line) %}
+          <li class="{{ 'is-found' if e.found else 'is-missing' if e.found == false else '' }}">
+            <p class="proof-quote">{% if e.found %}{{ icon('check', 15) }}{% elif e.found == false %}{{ icon('alert', 15) }}{% endif %} “{{ e.quote }}”</p>
+            {% if line %}
+              <p class="proof-line"><strong>Line {{ line.n }}, {{ line.speaker or 'Unknown speaker' }}:</strong> {{ line.text }}</p>
+            {% else %}
+              <p class="proof-line">Line {{ e.line }} isn't in the transcript.</p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{# Export & Share, on the meeting's page once it has notes. #}
+{% from "_macros.html" import csrf %}
+{% from "_icons.html" import icon %}
+{% if meeting.overview %}
+<section class="card export-card" id="export">
+  <h2>Export &amp; Share</h2>
+  <div class="export-links">
+    <a class="button button-quiet" href="{{ url_for('exports.word', meeting_id=meeting.id) }}">{{ icon('download') }} Word</a>
+    <a class="button button-quiet" href="{{ url_for('exports.markdown', meeting_id=meeting.id) }}">{{ icon('download') }} Markdown</a>
+    <a class="button button-quiet" href="{{ url_for('exports.printable', meeting_id=meeting.id) }}">{{ icon('printer') }} PDF</a>
+    <a class="button button-quiet" href="{{ url_for('exports.email', meeting_id=meeting.id) }}">{{ icon('mail') }} Email</a>
+  </div>
+  <h3>Share Link</h3>
+  {% if share_url %}
+    <p class="muted small">Anyone with this link can read the minutes (not the transcript).</p>
+    <div class="copy-row">
+      <label class="visually-hidden" for="share-url">Share link</label>
+      <input id="share-url" type="text" value="{{ share_url }}" readonly>
+      <button class="button button-quiet" type="button" data-copy="share-url" hidden>Copy</button>
+    </div>
+    <form method="post" action="{{ url_for('exports.share', meeting_id=meeting.id) }}">
+      {{ csrf() }}<input type="hidden" name="on" value="0">
+      <button class="link-button danger" type="submit">Turn the link off</button>
+    </form>
+  {% else %}
+    <form method="post" action="{{ url_for('exports.share', meeting_id=meeting.id) }}" class="row-between">
+      {{ csrf() }}<input type="hidden" name="on" value="1">
+      <p class="muted small">Off. A read-only page of the minutes, for people without a login.</p>
+      <button class="button button-quiet" type="submit">{{ icon('link') }} Make a link</button>
+    </form>
+  {% endif %}
+</section>
+{% endif %}

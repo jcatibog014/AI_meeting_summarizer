@@ -1,0 +1,34 @@
+# Render "Blueprint": tells Render how to build and run Sticky Minutes.
+# Render reads this file when you choose New -> Blueprint and pick this repo.
+# The steps are in docs/DEPLOY.md.
+services:
+  - type: web
+    name: sticky-minutes
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    # upgrade-db makes or updates the tables first (it changes nothing when they're up to date).
+    # Summaries run in background threads of the web process (summarize.py), so gunicorn uses
+    # threads; a summary's state is in the database, so any thread can answer the page's questions.
+    startCommand: >-
+      flask --app stickyminutes upgrade-db &&
+      gunicorn --worker-class gthread --workers 1 --threads 8 --timeout 120
+      --bind 0.0.0.0:$PORT "stickyminutes:create_app()"
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.5"
+      - key: SECRET_KEY
+        generateValue: true   # signs logins, share links and the calendar feed: never change it once live
+      - key: DATABASE_URL
+        sync: false           # Neon's connection string: you paste it in Render (docs/DEPLOY.md)
+      - key: BASE_URL
+        sync: false           # the site's address, like https://sticky-minutes.onrender.com
+      - key: ANTHROPIC_API_KEY
+        sync: false           # your Claude API key; without it the site runs in practice mode
+      - key: DAILY_CAP_CENTS
+        value: "100"          # the most the whole site may spend on Claude in a day: $1
+      - key: DEMO_RUNS_PER_DAY
+        value: "3"            # real summaries each demo visitor may run in a day

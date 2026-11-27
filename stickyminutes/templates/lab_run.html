@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head %}
+{% from "_icons.html" import icon %}
+{% block title %}Run Details - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {{ page_head('Run Details', back=url_for('lab.index'), back_label='Quality Lab') }}
+  <div class="lab-run">
+    <section class="card">
+      <h2>What Happened</h2>
+      <dl class="facts">
+        <div><dt>Meeting</dt><dd><a href="{{ url_for('meetings.show', meeting_id=meeting.id) }}">{{ meeting.title }}</a></dd></div>
+        <div><dt>Started</dt><dd>{{ run.created_at|when }}</dd></div>
+        <div><dt>Model</dt><dd>{{ 'Sample: written for the demo, not made by Claude' if run.sample else 'Practice (no API key)' if run.practice else model.label }}{% if run.served_model and run.served_model != run.model %} &rarr; {{ run.served_model }} (fallback){% endif %}</dd></div>
+        <div><dt>Prompt</dt><dd>{{ run.prompt_version }}, effort {{ run.effort }}</dd></div>
+        <div><dt>Tries</dt><dd>{{ run.attempts }}</dd></div>
+        <div><dt>Tokens</dt><dd>{{ run.input_tokens|number }} in, {{ run.output_tokens|number }} out</dd></div>
+        <div><dt>Prompt cache</dt><dd>{{ run.cache_write_tokens|number }} written, {{ run.cache_read_tokens|number }} read</dd></div>
+        {% if not run.practice and not run.sample %}<div><dt>Cost</dt><dd>{{ run.cost_micros|dollars }} (estimated {{ run.estimate_micros|dollars }})</dd></div>{% endif %}
+        <div><dt>Time</dt><dd>{{ run.seconds|seconds if run.seconds else '–' }}</dd></div>
+        <div><dt>Ended with</dt><dd>{{ run.stop_reason or '–' }}</dd></div>
+        <div><dt>Result</dt><dd>{{ {'done': 'Done', 'needs_review': 'Needs review', 'failed': 'Failed'}.get(run.status, 'Running') }}</dd></div>
+      </dl>
+      {% if run.error %}<p class="form-error">{{ run.error }}</p>{% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Checks, Try by Try</h2>
+      {% if by_attempt %}
+        {% for attempt in range(1, run.attempts + 1) %}
+          <h3>Try {{ attempt }}</h3>
+          {% if by_attempt.get(attempt) %}
+            <ul class="issue-list">
+              {% for issue in by_attempt[attempt] %}
+                <li class="{{ 'is-fixed' if issue.fixed else '' }}">
+                  <span class="pill {{ 'pill-ok' if issue.fixed else 'pill-warn' }}">{{ 'Fixed later' if issue.fixed else 'Not fixed' }}</span>
+                  <span><strong>{{ layers.get(issue.layer, issue.layer) }}</strong>{% if issue.path %} <code>{{ issue.path }}</code>{% endif %}: {{ issue.message }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="ok-line">{{ icon('check', 16) }} Passed every check.</p>
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <p class="ok-line">{{ icon('check', 16) }} The first answer passed every check: the shape, the rules and the transcript.</p>
+      {% endif %}
+    </section>
+
+    {% if raw %}
+      <section class="card raw-card">
+        <details>
+          <summary><h2>{{ 'The Last Answer' if run.sample or run.practice else "Claude's Last Answer" }}</h2></summary>
+          <pre>{{ raw }}</pre>
+        </details>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

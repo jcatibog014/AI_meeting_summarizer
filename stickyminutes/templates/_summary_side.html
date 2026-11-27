@@ -1,0 +1,31 @@
+{# The side card about the summary: run it, what it costs, and how the last run went. #}
+{% from "_macros.html" import csrf %}
+{% from "_icons.html" import icon %}
+<section class="card summary-card">
+  <h2>Summary</h2>
+  {% if practice %}
+    <p class="muted small">{{ icon('info', 15) }} Practice mode: there is no Claude API key yet, so the notes are made from the transcript's own words. Free, and simple.</p>
+  {% endif %}
+  {% if run %}
+    <dl class="facts">
+      <div><dt>Last run</dt><dd>{{ run.created_at|when }}</dd></div>
+      <div><dt>Model</dt><dd>{{ 'Sample (not Claude)' if run.sample else 'Practice' if run.practice else (run.served_model or run.model) }}{% if run.served_model and run.served_model != run.model %} <span class="muted">(fallback)</span>{% endif %}</dd></div>
+      <div><dt>Tries</dt><dd>{{ run.attempts }}</dd></div>
+      {% if not run.practice and not run.sample %}<div><dt>Cost</dt><dd>{{ run.cost_micros|dollars }}</dd></div>{% endif %}
+      {% if run.seconds %}<div><dt>Time</dt><dd>{{ run.seconds|seconds }}</dd></div>{% endif %}
+    </dl>
+    {% if has_page('lab.run') %}<p><a href="{{ url_for('lab.run', run_id=run.id) }}">See how this run went</a></p>{% endif %}
+  {% endif %}
+  {% if meeting.status not in ('queued', 'running') %}
+    <form method="post" action="{{ url_for('summaries.start', meeting_id=meeting.id) }}" class="stack"
+          {% if run %}data-confirm="Run the summary again? The notes on this page, and your changes to them, are replaced."{% endif %}>
+      {{ csrf() }}
+      <button class="button button-block" type="submit">{{ icon('retry' if run else 'sparkle') }} {{ 'Run again' if run else 'Summarize' }}</button>
+      <p class="muted small">
+        {% if practice %}Free in practice mode.
+        {% else %}{{ model_label }}, {{ estimate_micros|cents }}.{% if runs_left is not none %} The demo has {{ plural(runs_left, 'real summary', 'real summaries') }} left today.{% endif %}
+        {% endif %}
+      </p>
+    </form>
+  {% endif %}
+</section>

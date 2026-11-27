@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head, csrf, empty %}
+{% from "_icons.html" import icon %}
+{% block title %}Action Items - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {{ page_head('Action Items') }}
+  <div class="tabs-row">
+    <nav aria-label="Which action items">
+      <ul class="tabs">
+        {% for key, label in tabs %}
+          <li><a href="{{ url_for('actions.index', tab=key, owner=owner) }}"{% if key == tab %} aria-current="page"{% endif %}>{{ label }} <span class="tab-count">{{ counts.get(key, 0) }}</span></a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+    {% if owners %}
+      <form method="get" class="owner-filter">
+        <input type="hidden" name="tab" value="{{ tab }}">
+        <label><span class="visually-hidden">Owner</span>
+          <select name="owner" data-auto-submit>
+            <option value="">Everyone</option>
+            {% for name in owners %}<option value="{{ name }}"{% if owner == name %} selected{% endif %}>{{ name }}</option>{% endfor %}
+            <option value="-"{% if owner == '-' %} selected{% endif %}>Unassigned</option>
+          </select>
+        </label>
+        <button class="button button-quiet" type="submit" data-auto-submit-button>Show</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if rows %}
+    <ul class="action-list">
+      {% for item, meeting in rows %}
+        {% set late = item.status == 'open' and item.due_date and item.due_date < today %}
+        <li class="action-row{% if item.status == 'done' %} is-done{% endif %}{% if late %} is-late{% endif %}">
+          <form method="post" action="{{ url_for('actions.done', item_id=item.id) }}" class="done-form">
+            {{ csrf() }}
+            <input type="hidden" name="done" value="{{ '0' if item.status == 'done' else '1' }}">
+            <input type="hidden" name="next" value="{{ request.full_path }}">
+            <button class="tick-box" type="submit" aria-pressed="{{ 'true' if item.status == 'done' else 'false' }}"
+                    title="{{ 'Open it again' if item.status == 'done' else 'Mark done' }}">
+              {% if item.status == 'done' %}{{ icon('check', 16) }}{% endif %}
+              <span class="visually-hidden">{{ 'Open again: ' if item.status == 'done' else 'Mark done: ' }}{{ item.text }}</span>
+            </button>
+          </form>
+          <div class="action-body">
+            <a class="action-task" href="{{ url_for('meetings.show', meeting_id=meeting.id, _anchor='item-' ~ item.id) }}">{{ item.text }}</a>
+            <p class="action-meta">
+              <span>{{ icon('user', 14) }} {{ item.owner or 'Unassigned' }}</span>
+              <span class="{{ 'late-word' if late else '' }}">{{ icon('calendar', 14) }}
+                {% if item.due_date %}{{ 'Overdue: ' if late }}{{ item.due_date|day }}{% elif item.due_phrase %}{{ item.due_phrase }}{% else %}No due date{% endif %}</span>
+              {% if item.priority == 'high' %}<span class="priority-high">High priority</span>{% endif %}
+              <span class="muted">{{ icon('meetings', 14) }} {{ meeting.title }}</span>
+              {% if item.status == 'done' and item.done_at %}<span class="muted">Done {{ item.done_at|ago }}</span>{% endif %}
+            </p>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {% call empty('Nothing Here' if counts['all'] else 'No Action Items Yet',
+                  'No action items match.' if counts['all'] else 'When a meeting is summarized, its action items gather here, from every meeting.') %}{% endcall %}
+  {% endif %}
+
+  <section class="card calendar-card" id="calendar">
+    <h2>{{ icon('calendar') }} Calendar Feed</h2>
+    <p class="muted">Add this link to Google Calendar ("Other calendars" &rarr; "From URL"), Outlook ("Add calendar" &rarr; "Subscribe from web") or Apple Calendar ("New Calendar Subscription"). Open action items with a due date show on their day. Keep the link private: anyone with it can see the tasks.</p>
+    <div class="copy-row">
+      <label class="visually-hidden" for="feed-url">Calendar link</label>
+      <input id="feed-url" type="text" value="{{ feed_url }}" readonly>
+      <button class="button button-quiet" type="button" data-copy="feed-url" hidden>Copy</button>
+    </div>
+    <form method="post" action="{{ url_for('actions.new_feed_link') }}" data-confirm="Make a new calendar link? The old link stops working, so calendars that use it stop updating.">
+      {{ csrf() }}
+      <button class="link-button" type="submit">Make a new link</button>
+    </form>
+  </section>
+{% endblock %}

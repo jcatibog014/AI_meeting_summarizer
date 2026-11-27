@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head %}
+{% block title %}Problems - Quality Lab - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {{ page_head('Quality Lab') }}
+  {% include "_lab_tabs.html" %}
+  <div class="layer-grid">
+    {% for (layer, rows), (_, name, about) in zip(groups, layers) %}
+      <section class="card layer-card layer-{{ layer }}">
+        <h2>{{ name }}</h2>
+        <p class="muted small">{{ about }}</p>
+        {% if rows %}
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Where</th><th class="num">Found</th><th class="num">Fixed</th></tr></thead>
+              <tbody>
+                {% for where, count, fixed, example in rows %}
+                  <tr>
+                    <td><code>{{ where }}</code><span class="example">Latest: {{ example }}</span></td>
+                    <td class="num">{{ count }}</td>
+                    <td class="num">{{ (fixed / count)|percent }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="ok-line">None caught yet.</p>
+        {% endif %}
+      </section>
+    {% endfor %}
+  </div>
+{% endblock %}

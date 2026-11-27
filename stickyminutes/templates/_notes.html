@@ -1,0 +1,62 @@
+{# The notes board on a meeting's page: the overview, then four columns of sticky notes. #}
+{% from "_icons.html" import icon %}
+{% from "_note.html" import note with context %}
+{% if meeting.status in ('queued', 'running') %}
+  <section class="card working" data-status-url="{{ url_for('summaries.status', meeting_id=meeting.id) }}" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <div>
+      <h2>{{ 'Summarizing' if meeting.status == 'running' else 'Starting' }}&hellip;</h2>
+      <p class="muted" data-status-words>{{ 'Practice mode writes the notes in a moment.' if practice else (model_label ~ ' is reading the transcript. This takes 20 to 90 seconds; the page updates by itself.') }}</p>
+    </div>
+  </section>
+{% elif meeting.status == 'failed' and run %}
+  <section class="card notice notice-danger" role="alert">
+    {{ icon('alert') }}
+    <div>
+      <h2>The Summary Didn't Finish</h2>
+      <p>{{ run.error or 'Something went wrong.' }}</p>
+    </div>
+  </section>
+{% endif %}
+
+{% set total = items.values()|map('length')|sum %}
+{% if meeting.overview %}
+  {% if meeting.status == 'needs_review' %}
+    <section class="card notice notice-warn">
+      {{ icon('flag') }}
+      <div>
+        <h2>Some Notes Need a Look</h2>
+        <p>The checks sent the problems back for fixing, but {{ plural(flagged_count if flagged_count is defined else 0, 'note') }} still failed a check. Each has a flag: read its transcript line before you trust it.</p>
+      </div>
+    </section>
+  {% endif %}
+  {% set all_items = items.values()|sum(start=[]) %}
+  {% set checked = all_items|rejectattr('review', 'equalto', 'unreviewed')|list|length %}
+  <section class="overview" aria-labelledby="overview-title">
+    <h2 id="overview-title" class="visually-hidden">Summary</h2>
+    <p>{{ meeting.overview }}</p>
+    {% if run and run.sample %}<p class="muted small">{{ icon('info', 15) }} Sample notes, written for the demo to show what a summary looks like (not made by Claude). They went through the same checks. Run again to summarize it for real.</p>
+    {% elif run and run.practice %}<p class="muted small">{{ icon('info', 15) }} Practice notes: made without Claude, because there is no API key yet.</p>{% endif %}
+    {% if all_items %}
+      <div class="review-progress">
+        <span><strong>{{ checked }} of {{ all_items|length }}</strong> notes checked</span>
+        <progress max="{{ all_items|length }}" value="{{ checked }}" aria-label="Notes checked">{{ checked }} of {{ all_items|length }}</progress>
+        <span class="muted small">Accept, reject or edit each note. Open “Proof” to see the words it comes from.</span>
+      </div>
+    {% endif %}
+  </section>
+  <div class="board">
+    {% for kind, heading, colour in sections %}
+      <section class="board-column column-{{ colour }}" aria-labelledby="col-{{ kind }}">
+        <h2 id="col-{{ kind }}">{{ heading }} <span class="column-count">{{ items[kind]|length }}</span></h2>
+        {% if items[kind] %}
+          <ul class="notes">
+            {% for item in items[kind] %}{{ note(item, colour) }}{% endfor %}
+          </ul>
+        {% else %}
+          <p class="column-empty">None in this meeting.</p>
+        {% endif %}
+      </section>
+    {% endfor %}
+  </div>
+{% endif %}

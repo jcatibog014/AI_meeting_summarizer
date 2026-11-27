@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head, csrf, field, textarea %}
+{% from "_icons.html" import icon %}
+{% block title %}New Meeting - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {{ page_head('New Meeting', back=url_for('meetings.index'), back_label='Meetings') }}
+  <form method="post" enctype="multipart/form-data" class="card new-meeting stack">
+    {{ csrf() }}
+    <div class="two-fields">
+      {{ field('title', 'Title', form.get('title'), errors.get('title'), hint='Optional: Claude names it if you leave it empty', attrs='maxlength="120" placeholder="Weekly planning"') }}
+      {{ field('meeting_date', 'Date', form.get('meeting_date') or today.isoformat(), errors.get('meeting_date'), type='date', attrs='required') }}
+    </div>
+    <div class="field{% if errors.get('transcript') %} has-error{% endif %}">
+      <span class="field-label">Transcript</span>
+      {% if errors.get('transcript') %}<p class="field-error" id="transcript-error">{{ errors.get('transcript') }}</p>{% endif %}
+      <label class="drop-box">
+        {{ icon('upload', 22) }}
+        <span><strong>Upload a file</strong> <span class="muted">.vtt, .srt, .txt or .docx, at most 2 MB</span></span>
+        <input type="file" name="file" accept=".vtt,.srt,.txt,.docx,text/vtt,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      </label>
+      <p class="or-line wide"><span>or paste it</span></p>
+      <textarea name="transcript" aria-label="Paste the transcript" placeholder="Maria Santos: Good morning, everyone. Let's start with the launch date.&#10;Ben Cruz: I think we can be ready by the 15th."{% if errors.get('transcript') %} aria-invalid="true" aria-describedby="transcript-error"{% endif %}>{{ form.get('transcript', '') }}</textarea>
+      <span class="field-note">Each turn on its own line, like “Name: what they said”. Times in front are fine.</span>
+    </div>
+    <div class="form-actions"><button class="button" type="submit">Save meeting</button></div>
+  </form>
+  <section class="card help-card">
+    <h2>Where to Find a Transcript</h2>
+    <ul class="plain-list">
+      <li><strong>Zoom:</strong> Recordings &rarr; your meeting &rarr; Audio transcript &rarr; Download (.vtt).</li>
+      <li><strong>Google Meet:</strong> the transcript is a Google Doc in Drive: File &rarr; Download &rarr; Word (.docx).</li>
+      <li><strong>Microsoft Teams:</strong> the meeting's Recap &rarr; Transcript &rarr; Download (.vtt or .docx).</li>
+    </ul>
+  </section>
+{% endblock %}

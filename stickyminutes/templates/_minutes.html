@@ -1,0 +1,33 @@
+{# The minutes as a clean document: for the print page and the shared page. No buttons, no transcript. #}
+{% macro minutes(meeting, items, sections, lines_label, due_words) %}
+  <article class="minutes">
+    <header class="minutes-head">
+      <h1>{{ meeting.title }}</h1>
+      <p class="minutes-facts"><strong>Date:</strong> {{ meeting.meeting_date|day }} &nbsp;·&nbsp; <strong>People:</strong> {{ meeting.speakers|join(', ') or 'not labelled' }}</p>
+    </header>
+    {% if meeting.overview %}<p class="minutes-overview">{{ meeting.overview }}</p>{% endif %}
+    {% for kind, heading, colour in sections %}
+      <section class="minutes-part part-{{ colour }}">
+        <h2>{{ heading }}</h2>
+        {% if items[kind] %}
+          <ul>
+            {% for item in items[kind] %}
+              <li>
+                <span class="minutes-text">{{ item.text }}</span>
+                {% if item.kind == 'action' %}
+                  <span class="minutes-extra">{{ item.owner or 'Unassigned' }}{% if due_words(item) %}, due {{ due_words(item) }}{% endif %}{% if item.priority == 'high' %}, high priority{% endif %}{% if item.status == 'done' %}, done{% endif %}</span>
+                {% endif %}
+                {% if item.kind == 'decision' and item.detail %}<span class="minutes-extra">Why: {{ item.detail }}</span>{% endif %}
+                {% if item.flag %}<span class="minutes-flag">Check this</span>{% endif %}
+                {% if lines_label(item) %}<span class="minutes-lines">{{ lines_label(item) }}</span>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="minutes-none">None.</p>
+        {% endif %}
+      </section>
+    {% endfor %}
+    <footer class="minutes-foot">Made with {{ APP_NAME }}. Line numbers point at the meeting's transcript.</footer>
+  </article>
+{% endmacro %}

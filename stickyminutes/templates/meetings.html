@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_head, empty %}
+{% from "_icons.html" import icon %}
+{% block title %}Meetings - {{ APP_NAME }}{% endblock %}
+{% block content %}
+  {% call page_head('Meetings') %}
+    <a class="button" href="{{ url_for('meetings.new') }}">{{ icon('plus') }} New meeting</a>
+  {% endcall %}
+  {% if meetings %}
+    <ul class="meeting-grid">
+      {% for meeting in meetings %}
+        {% set words, style = meeting_status(meeting) %}
+        <li class="meeting-card">
+          <a href="{{ url_for('meetings.show', meeting_id=meeting.id) }}">
+            <span class="meeting-card-date">{{ meeting.meeting_date|day }}</span>
+            <span class="meeting-card-title">{{ meeting.title }}</span>
+            {% if meeting.overview %}<span class="meeting-card-text">{{ meeting.overview|truncate(140) }}</span>{% endif %}
+            <span class="meeting-card-foot">
+              <span class="pill {{ style }}">{{ words }}</span>
+              <span class="muted small">{{ plural(meeting.speakers|length, 'speaker') }} · {{ plural(meeting.line_count, 'line') }}</span>
+            </span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {% call empty('No Meetings Yet', 'Paste a transcript or upload one from Zoom, Google Meet or Teams, and get the summary, decisions and action items.') %}
+      <a class="button" href="{{ url_for('meetings.new') }}">{{ icon('plus') }} New meeting</a>
+    {% endcall %}
+  {% endif %}
+{% endblock %}
